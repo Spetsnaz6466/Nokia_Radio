@@ -1,0 +1,150 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+/*	Para aumentar mas RNC:
+   1. aumente el valor de TOTAL_RNC en el numero deseaso
+   2. Aumente las lineas en orden consecutivo: RNC[39]="CASR3"; REGION[39]="R7"; RNC_NAME[39]= "CASCADA_3"; 
+   3. Si desea comenzar la macro desde cierto RNC: for(x=1;x<=TOTAL_RNC;x++)      /// cambie el X=1 por el deseado.
+*/
+
+function main()
+  string filename,temp,temp2,line,dia_semana;
+  string RNC[],REGION[],RNC_NAME[],PCTime,UT[],date[];
+  integer handle,x,y,z,TOTAL_RNC=42,handle2;
+  string anho[],mes[],dia[],j="",fecha_menor,anho1[],mes1[],dia1[];   
+
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="##### ADVERTENCIA ####\n\Ingrese abreviacion del dia de la semana para:\nDOMINGO   =  SUN\nLUNES   =   MON\nMARTES   =  TUE\nMIERCOLES   =   WED\nJUEVES   =   THU\nVIERNES   =   FRI\nSABADO   =   SAT";
+  ask(dia_semana,temp);
+  if(dia_semana=="SUN"); dia_semana="SUNSAFE"; 
+  elseif(dia_semana=="MON"); dia_semana="MONSAFE"; 
+  elseif(dia_semana=="TUE"); dia_semana="TUESAFE";
+  elseif(dia_semana=="WED"); dia_semana="WEDSAFE";
+  elseif(dia_semana=="THU"); dia_semana="THUSAFE";
+  elseif(dia_semana=="FRI"); dia_semana="FRISAFE";
+  elseif(dia_semana=="SAT"); dia_semana="SATSAFE";
+  endif
+  
+  RNC[1]="BANR1"; REGION[1]="5"; RNC_NAME[1]="BANDERAS_1";
+  RNC[2]="BANR2"; REGION[2]="5"; RNC_NAME[2]="BANDERAS_2";
+  RNC[3]="COLR1"; REGION[3]="5"; RNC_NAME[3]="COLIMA_1";
+  RNC[4]="FUER1"; REGION[4]="5"; RNC_NAME[4]="FUENTES_1";
+  RNC[5]="FUER2"; REGION[5]="5"; RNC_NAME[5]="FUENTES_2";
+  RNC[6]="MORR1"; REGION[6]="5"; RNC_NAME[6]="MORELIA_1";
+  RNC[7]="MORR2"; REGION[7]="5"; RNC_NAME[7]="MORELIA_2";
+  RNC[8]="PROR1"; REGION[8]="5"; RNC_NAME[8]="PROVIDENCIA_1";
+  RNC[9]="PROR2"; REGION[9]="5"; RNC_NAME[9]="PROVIDENCIA_2";
+  RNC[10]="PROR3"; REGION[10]="5"; RNC_NAME[10]="PROVIDENCIA_3";
+  RNC[11]="PVRR1"; REGION[11]="5"; RNC_NAME[11]="PUERTO_VALLARTA_1";
+  RNC[12]="PVRR2"; REGION[12]="5"; RNC_NAME[12]="PUERTO_VALLARTA_2";
+  RNC[13]="TLAR1"; REGION[13]="5"; RNC_NAME[13]="TLAQUEPAQUE_1";
+  RNC[14]="URUR1"; REGION[14]="5"; RNC_NAME[14]="URUAPAN_1";
+  RNC[15]="CHLR1"; REGION[15]="7"; RNC_NAME[15]="CHILPANCINGO_1";
+  RNC[16]="CZAR1"; REGION[16]="7"; RNC_NAME[16]="CUATZACUALCOS_1";
+  RNC[17]="CZAR2"; REGION[17]="7"; RNC_NAME[17]="CUATZACUALCOS_2";
+  RNC[18]="FTER1"; REGION[18]="7"; RNC_NAME[18]="FUERTES_1";
+  RNC[19]="FTER2"; REGION[19]="7"; RNC_NAME[19]="FUERTES_2";
+  RNC[20]="FTER3"; REGION[20]="7"; RNC_NAME[20]="FUERTES_3";
+  RNC[21]="HIDR1"; REGION[21]="7"; RNC_NAME[21]="HIDALGO_1";
+  RNC[22]="HIDR2"; REGION[22]="7"; RNC_NAME[22]="HIDALGO_2";
+  RNC[23]="LERR1"; REGION[23]="7"; RNC_NAME[23]="LERDO_1";
+  RNC[24]="LERR2"; REGION[24]="7"; RNC_NAME[24]="LERDO_2";
+  RNC[25]="LERR3"; REGION[25]="7"; RNC_NAME[25]="LERDO_3";
+  RNC[26]="LPPR1"; REGION[26]="7"; RNC_NAME[26]="LA_PAZ_1";
+  RNC[27]="OAXR1"; REGION[27]="7"; RNC_NAME[27]="OAXACA_1";
+  RNC[28]="OAXR2"; REGION[28]="7"; RNC_NAME[28]="OAXACA_2";
+  RNC[29]="POZR1"; REGION[29]="7"; RNC_NAME[29]="POZA_RICA_1";
+  RNC[30]="XALR1"; REGION[30]="7"; RNC_NAME[30]="XALAPA_1";
+  RNC[31]="XALR2"; REGION[31]="7"; RNC_NAME[31]="XALAPA_2";
+  RNC[32]="BONR1"; REGION[32]="8"; RNC_NAME[32]="BONANPAK_1";
+  RNC[33]="BONR2"; REGION[33]="8"; RNC_NAME[33]="BONANPAK_2";
+  RNC[34]="CASR1"; REGION[34]="8"; RNC_NAME[34]="CASCADA_1";
+  RNC[35]="CASR2"; REGION[35]="8"; RNC_NAME[35]="CASCADA_2";
+  RNC[36]="CASR3"; REGION[36]="8"; RNC_NAME[36]="CASCADA_3";
+  RNC[37]="PLZR1"; REGION[37]="8"; RNC_NAME[37]="PLAZA_1";
+  RNC[38]="PLZR2"; REGION[38]="8"; RNC_NAME[38]="PLAZA_2";
+  RNC[39]="PLZR3"; REGION[39]="8"; RNC_NAME[39]="PLAZA_3";
+  RNC[40]="VJZR1"; REGION[40]="8"; RNC_NAME[40]="VILLA_HERMOSA_1";
+  RNC[41]="VJZR2"; REGION[41]="8"; RNC_NAME[41]="VILLA_HERMOSA_2";
+  RNC[42]="VJZR3"; REGION[42]="8"; RNC_NAME[42]="VILLA_HERMOSA_3";
+  
+  filename="EP_REPORTE_FB_TELCEL_MEXICO_"+ PCTime +".TXT"; print("Creating file %s \n",filename);
+  handle = fileopen(filename,NEW); fileclose(handle);
+  logenable(LOG_ENABLE_ALL); logset(filename,APPEND); logclose(); 
+   
+  for(x=1;x<=TOTAL_RNC;x++)      /// Aqui comienza la macro
+   handle2=deviceopen(RNC[x]);
+   question(1, "CONFIRM COMMAND EXECUTION: Y/N ?"); answer(1, "Y");
+   temp= inttostr(x,DEC) + " de "+ inttostr(TOTAL_RNC,DEC) +" REGION "+ REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x]; pause(3,temp);
+   logclose();
+   logenable(LOG_ENABLE_ALL); 
+   logset(filename,APPEND); 
+   LOG_SQUARE(RNC_NAME[x]);
+   LOG_SQUARE("RESULTADO DEL FALLBACK"); 
+   tx("ZAHP::NR=27;");  
+   if(getline(line," 'READY'")) 
+     temp="NAME: "+RNC[x]+" "+"STATUS: RNC REPORTA FB READY"; print("%s\n",temp);
+   else       
+     LOG_SQUARE("BUSCANDO_FB_MAS_ANTIGUO"); 
+     tx("ZWQO:CR;"); y=1;
+     while(getline(line))   
+       strscan(line,"%s %s",temp,temp2);
+       if(temp2=="FB") print("RNC %s FB: %s\n",RNC[x],temp); endif
+       if(temp2=="BU") print("RNC %s BU: %s\n",RNC[x],temp); endif
+       if(temp2=="NW") print("RNC %s NW: %s\n",RNC[x],temp); endif   
+       if(temp2=="UT") UT[y]=temp; print("RNC %s UT %d: %s\n",RNC[x],y,temp); y++; endif      
+     endwhile
+     z=y-1;
+     for(y=1;y<=z;y++) 
+       tx("ZIWX::WS,NODEF:%s:%%,%%,,DAT;",UT[y]); delay(2000);
+       if(getline(line," 'NO SUCH DIRECTORY ' "))                                
+         deviceclose(RNC[x]);
+         handle2=deviceopen(RNC[x]);
+         print("!! PAQUETE SIN FECHA, SE BORRARA %s ¡¡¡\n",UT[y]);
+         tx("ZWQD:NAME=%s:DIRE,PRINTS;",UT[y]); 
+       elseif(getline(line," 'SCMANA ' OR 'BLCODE' OR 'LFILES' ")) 
+         strscan(line,"%s %s %s %s %s",date[y],date[y],date[y],date[y],date[y]);
+       endif
+       print("Paquete UT %d: %s fecha %s\n",y,date[y],UT[y]);
+     endfor
+     fecha_menor=date[1]; fecha_menor=strreplace(fecha_menor,"-"," "); 
+     strscan(fecha_menor,"%s %s %s",anho[1],mes[1],dia[1]); UT[6]=UT[1]; 
+     for(y=2; y<=z; y++)
+       j=strreplace(date[y],"-"," "); strscan(j,"%s %s %s",anho1[y],mes1[y],dia1[y]); 
+       if(strtoint(anho1[y],DEC) < strtoint(anho[1],DEC) )
+         UT[6]=UT[y]; print("AÑO MENOR %s\n",UT[6]); anho[1]=anho1[y]; mes[1]="0"; dia[1]="0"; 
+       elseif(strtoint(mes1[y],DEC) < strtoint(mes[1],DEC)) 
+         fecha_menor=strreplace(date[y],"-"," "); strscan(fecha_menor,"%s %s %s",anho[1],mes[1],dia[1]); UT[6]=UT[y];
+       elseif(mes1[y]== mes[1]) 
+         if(strtoint(dia1[y],DEC) < strtoint(dia[1],DEC)) 
+           fecha_menor=strreplace(date[y],"-"," "); strscan(fecha_menor,"%s %s %s",anho[1],mes[1],dia[1]); UT[6]=UT[y];
+         endif  
+       endif
+     endfor
+     for(y=1; y<=z; y++)
+       if(dia_semana==UT[y]) UT[6]=dia_semana; endif 
+     endfor
+     print("BORRARANDO PAQUETE:  %s\n",UT[6]);
+     tx("ZWQD:NAME=%s:DIRE,PRINTS;",UT[6]);
+     if(getline(line," 'RESERVING SOFTWARE CONFIGURATION OPERATION ' ")) print("##### SOFTWARE RESERVADO ####!!!!!\n");
+     endif
+     tx("ZWKS:MODE=FULL,NAME=%s,DIRE=%s;",dia_semana,dia_semana); 
+     if(getline(line," 'RESERVING SOFTWARE CONFIGURATION OPERATION ' ")) print("##### SOFTWARE RESERVADO ####\n");
+     elseif(getline(line," 'COMMAND EXECUTED AND FUNCTION STARTED' ")) print("\n\n%s COMIENZA PROCESO DE FALL BACK \n",RNC[x]);
+     elseif(getline(line," 'PACKAGE NAME IS ALREADY IN USE' ")) print("##### NOMBRE DE FALLBACK EN USO #### \n");
+       PCTime=strreplace(PCTime,"-",""); PCTime="FB"+PCTime;
+       tx("ZWKS:MODE=FULL,NAME=%s,DIRE=%s;",dia_semana,dia_semana); 
+       if(getline(line,"'COMMAND EXECUTED AND FUNCTION STARTED' ")) print("%s COMIENZA PROCESO DE FALL BACK \n",RNC[x]); endif
+     else print(line);
+     endif
+   endif
+   deviceclose(RNC[x]); 
+  endfor
+  winexec(strprint("NotePad %s",filename));  
+ 
+endfunction
+
+
+ 
+     

@@ -1,0 +1,45 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string line,flag="off";
+  string btsName;
+  string hsdpaBbResAllocation;
+  string RF;
+  string modulo;
+  integer file;
+  
+  file = fileopen("BackupCommissioning_CA0628U850_20111010.xml",READ);
+  
+  while(fileread(file,line,2000))
+    if(filegetline(file,line,"'btsName' ")) 
+      strfetch(line," '>':2-11",btsName); print("%s\n",btsName); 
+    endif
+    if(filegetline(file,line,"'hsdpaBbResAllocation' ")) 
+      strfetch(line," '>':2-5",hsdpaBbResAllocation); print("%s\n",hsdpaBbResAllocation); 
+    endif
+   
+   
+    if(filegetline(file,line,"'471266A' ")) 
+      if(filegetline(file,line,"'unitNumber' "))  
+        strfetch(line," '>':2",RF);
+        print(RF);
+      endif
+      if(filegetline(file,line,"'variant' "))  
+        strfetch(line," '>':2-3",modulo);
+        print("FR %s",modulo);
+      endif
+    endif
+    if(filegetline(file,line,"'471268A' ")) 
+    //  print("FRCB ");
+      if(filegetline(file,line,"'unitNumber' "))  
+        strfetch(line," '>':2",RF);
+        print(RF);
+      endif
+    endif
+  endwhile
+  
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

@@ -1,0 +1,39 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string filename,temp;
+  string RNC[],RNC_NAME[],PCTime;
+  integer handle,x,y,z;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="LERR1"; RNC_NAME[1]= "LERDO 1";
+  RNC[2]="LERR2"; RNC_NAME[2]= "LERDO 2";
+  RNC[3]="LPPR1"; RNC_NAME[3]= "LA PAZ 1"; /*jec*/
+  RNC[4]="OAXR1"; RNC_NAME[4]= "OAXACA 1"; 
+  RNC[5]="OAXR2"; RNC_NAME[5]= "OAXACA 2";
+  
+  
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=1;x<6;x++)
+   /*Acceso al Device de turno, llama funcion que inserta clave automaticamente*/
+   device(RNC[x]); 
+   temp="Accesando a " + RNC_NAME[x]+ ", un momento por favor...";
+   pause(3,temp);
+   filename=RNC[x]+"_"+RNC_NAME[x]+"_"+ PCTime +".TXT";
+   print("Creando archivo %s \n",filename); handle = fileopen(filename,NEW); 
+   fileprint(handle,"# RNC= %s # \n\n",RNC_NAME[x]); fileclose(handle);
+   logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+   for(y=1; y<30; y++)
+     temp=RNC_MEAS(y);
+     tx("ZT2I:NAME=%s:OID=001:ICH=S;",temp);
+   endfor 
+   logclose();
+  deviceclose(RNC[x]); 
+  endfor
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

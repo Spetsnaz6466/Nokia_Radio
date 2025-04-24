@@ -1,0 +1,1036 @@
+//Libreria de funciones varias por Juan E. Castillo
+
+string function WBTS_ALM_LEVEL(string filename)     
+// De un log se toma el nivel de alarma pudiendo ser menor, mayor y critico
+  integer file_handle;
+  string  wbtsalarmlvl,line;
+   
+  file_handle = fileopen(filename,READ); 
+  //print("WBTS ALM LEVEL from:  %s \n",filename);      
+  if(filegetline(file_handle,line," '***'")) wbtsalarmlvl="CRITICAL";  
+  elseif(filegetline(file_handle,line," '**'")) wbtsalarmlvl="MAYOR"; 
+  elseif(filegetline(file_handle,line," '*'")) wbtsalarmlvl="MINOR"; endif
+  return wbtsalarmlvl; //Poner contador de alarmas mayores menores y criticas.   
+
+endfunction
+    
+string function WBTS_ALM_CODE(string filename)
+// De un log de WBTS se toma el codigo de la alarma
+  integer file_handle,WBTS_ALM_NUMBER=0,count=3000;
+  string  temp="",FLAG="OFF",line="",wbts_alm_code;
+   
+  file_handle = fileopen(filename,READ); 
+  //print("WBTS ALM CODE from:  %s \n",filename);
+  while(FLAG=="OFF") 
+  if(fileread(file_handle,line,count) )    
+    if(FLAG<>"DONE") while(filegetline(file_handle,line," '    3'")) 
+       strfetch(line,"5-8",temp); WBTS_ALM_NUMBER=strtoint(temp,DEC); 
+       if(WBTS_ALM_NUMBER > 3000) FLAG="DONE"; 
+       //print("FOUND ALARM CODE: %d",WBTS_ALM_NUMBER); 
+       break; 
+       else WBTS_ALM_NUMBER=0;  endif endwhile  endif      
+    if(FLAG<>"DONE") while(filegetline(file_handle,line," '    7'")) 
+       strfetch(line,"5-8",temp); WBTS_ALM_NUMBER=strtoint(temp,DEC); 
+       if(WBTS_ALM_NUMBER > 7400) FLAG="DONE"; 
+       //print("FOUND ALARM CODE: %d",WBTS_ALM_NUMBER); 
+       break; 
+       else WBTS_ALM_NUMBER=0;  endif endwhile  endif        
+    if(FLAG<>"DONE") while(filegetline(file_handle,line," '    6'")) 
+        strfetch(line,"5-9",temp); WBTS_ALM_NUMBER=strtoint(temp,DEC); 
+        if(WBTS_ALM_NUMBER > 61005) FLAG="DONE"; 
+        //print("FOUND ALARM CODE: %d",WBTS_ALM_NUMBER); 
+        break; 
+        else WBTS_ALM_NUMBER=0;  endif endwhile  endif                 
+    if(7401 <= WBTS_ALM_NUMBER <= 7799) wbts_alm_code=inttostr(WBTS_ALM_NUMBER,DEC);          
+      elseif(61006 <= WBTS_ALM_NUMBER <= 61602) wbts_alm_code=inttostr(WBTS_ALM_NUMBER,DEC);   
+      elseif(3000 <= WBTS_ALM_NUMBER <= 4000)  wbts_alm_code=inttostr(WBTS_ALM_NUMBER,DEC); 
+    endif  
+  endif
+  return wbts_alm_code;
+  endwhile  
+endfunction
+
+string function WBTS_ALARMS(string WBTS_ALM_NUMBER)
+  integer z=1;
+  string WBTS_ALM[],WBTS_ALM_REPORT[],ALM_WBTS;
+
+//Se pueden añadir lineas para analizar nuevas alarmas, aumentar la busqueda de alarmas, el ultimo fue 85
+
+  WBTS_ALM[1]="7401" ; WBTS_ALM_REPORT[1]="EXTERNAL AL 1"; 
+  WBTS_ALM[2]="7402" ; WBTS_ALM_REPORT[2]="EXTERNAL AL 2"; 
+  WBTS_ALM[3]="7403" ; WBTS_ALM_REPORT[3]="EXTERNAL AL 3";
+  WBTS_ALM[4]="7404" ; WBTS_ALM_REPORT[4]="EXTERNAL AL 4"; 
+  WBTS_ALM[5]="7405" ; WBTS_ALM_REPORT[5]="EXTERNAL AL 5"; 
+  WBTS_ALM[6]="7406" ; WBTS_ALM_REPORT[6]="EXTERNAL AL 6"; 
+  WBTS_ALM[7]="7407" ; WBTS_ALM_REPORT[7]="EXTERNAL AL 7"; 
+  WBTS_ALM[8]="7408" ; WBTS_ALM_REPORT[8]="EXTERNAL AL 8"; 
+  WBTS_ALM[9]="7409" ; WBTS_ALM_REPORT[9]="EXTERNAL AL 9"; 
+  WBTS_ALM[10]="7410" ; WBTS_ALM_REPORT[10]="EXTERNAL AL 10"; 
+  WBTS_ALM[11]="7411" ; WBTS_ALM_REPORT[11]="EXTERNAL AL 11"; 
+  WBTS_ALM[12]="7412" ; WBTS_ALM_REPORT[12]="EXTERNAL AL 12"; 
+  WBTS_ALM[13]="7413" ; WBTS_ALM_REPORT[13]="EXTERNAL AL 13"; 
+  WBTS_ALM[14]="7414" ; WBTS_ALM_REPORT[14]="EXTERNAL AL 14"; 
+  WBTS_ALM[15]="7415" ; WBTS_ALM_REPORT[15]="EXTERNAL AL 15"; 
+  WBTS_ALM[16]="7416" ; WBTS_ALM_REPORT[16]="EXTERNAL AL 16"; 
+  WBTS_ALM[17]="7417" ; WBTS_ALM_REPORT[17]="EXTERNAL AL 17"; 
+  WBTS_ALM[18]="7418" ; WBTS_ALM_REPORT[18]="EXTERNAL AL 18"; 
+  WBTS_ALM[19]="7419" ; WBTS_ALM_REPORT[19]="EXTERNAL AL 19"; 
+  WBTS_ALM[20]="7420" ; WBTS_ALM_REPORT[20]="EXTERNAL AL 20"; 
+  WBTS_ALM[21]="7421" ; WBTS_ALM_REPORT[21]="EXTERNAL AL 21"; 
+  WBTS_ALM[22]="7422" ; WBTS_ALM_REPORT[22]="EXTERNAL AL 22"; 
+  WBTS_ALM[23]="7423" ; WBTS_ALM_REPORT[23]="EXTERNAL AL 23"; 
+  WBTS_ALM[24]="7424" ; WBTS_ALM_REPORT[24]="EXTERNAL AL 24"; 
+  WBTS_ALM[25]="7425" ; WBTS_ALM_REPORT[25]="EXTERNAL AL 25"; 
+  WBTS_ALM[26]="7650" ; WBTS_ALM_REPORT[26]="BASE STATION FAULTY";
+  WBTS_ALM[27]="7651" ; WBTS_ALM_REPORT[27]="BASE STATION OPERATION DEGRADED"; 
+  WBTS_ALM[28]="7652" ; WBTS_ALM_REPORT[28]="BASE STATION NOTIFICATION"; 
+  WBTS_ALM[29]="7653" ; WBTS_ALM_REPORT[29]="CELL FAULTY"; 
+  WBTS_ALM[30]="7654" ; WBTS_ALM_REPORT[30]="CELL OPERATION DEGRADED"; 
+  WBTS_ALM[31]="7655" ; WBTS_ALM_REPORT[31]="CELL NOTIFICATION"; 
+  WBTS_ALM[32]="7660" ; WBTS_ALM_REPORT[32]="BASE STATION LICENCE EXPIRED"; 
+  WBTS_ALM[33]="7661" ; WBTS_ALM_REPORT[33]="BASE STATION LICENCE NOTIFICATION"; 
+  WBTS_ALM[34]="7665" ; WBTS_ALM_REPORT[34]="BASE STATION TRANSMISSION ALARM"; 
+  WBTS_ALM[35]="7740" ; WBTS_ALM_REPORT[35]="BEATING WCDMA BTS ALARM"; 
+  WBTS_ALM[36]="7750" ; WBTS_ALM_REPORT[36]="FAILURE IN WCDMA WBTS O&M CONNECTION"; 
+  WBTS_ALM[37]="7761" ; WBTS_ALM_REPORT[37]="RNW O&M SCENARIO FAILURE"; 
+  WBTS_ALM[38]="7762" ; WBTS_ALM_REPORT[38]="RNW DATABASE OPERATION FAILURE"; 
+  WBTS_ALM[39]="7771" ; WBTS_ALM_REPORT[39]="WCDMA CELL OUT OF USE"; 
+  WBTS_ALM[40]="7772" ; WBTS_ALM_REPORT[40]="HSDPA CONFIGURATION FAILED"; 
+  WBTS_ALM[41]="7775" ; WBTS_ALM_REPORT[41]="INCONSISTENCY IN WCEL CONFIGURATION PARAMETERS"; 
+  WBTS_ALM[42]="7776" ; WBTS_ALM_REPORT[42]="HSDPA FAILURE IN WCEL"; 
+  WBTS_ALM[43]="7778" ; WBTS_ALM_REPORT[43]="CDMA BTS DEDICATED MEASUREMENT FAILURE"; 
+  WBTS_ALM[44]="7779" ; WBTS_ALM_REPORT[44]="RECOVERY ACTIONS ONGOING"; 
+  WBTS_ALM[45]="7780" ; WBTS_ALM_REPORT[45]="HSUPA FAILURE IN WCEL"; 
+  WBTS_ALM[46]="7782" ; WBTS_ALM_REPORT[46]="HSUPA CONFIGURATION FAILED"; 
+  WBTS_ALM[47]="7799" ; WBTS_ALM_REPORT[47]="RNC RADIO NETWORK TEST ALARM"; 
+  WBTS_ALM[48]="61006" ; WBTS_ALM_REPORT[48]="FTM booted"; 
+  WBTS_ALM[49]="61010" ; WBTS_ALM_REPORT[49]="BTS reset required"; 
+  WBTS_ALM[50]="61028" ; WBTS_ALM_REPORT[50]="Loss of frame";  
+  WBTS_ALM[51]="61029" ; WBTS_ALM_REPORT[51]="Loss of signal";  
+  WBTS_ALM[52]="61040" ; WBTS_ALM_REPORT[52]="Interface under test";  
+  WBTS_ALM[53]="61050" ; WBTS_ALM_REPORT[53]="No inserted or non-compliant SFP module";  
+  WBTS_ALM[54]="61057" ; WBTS_ALM_REPORT[54]="Loss of cell delineation on ATM interface";  
+  WBTS_ALM[55]="61058" ; WBTS_ALM_REPORT[55]="Synchronisation lost";  
+  WBTS_ALM[56]="61059" ; WBTS_ALM_REPORT[56]="Timing source lost";  
+  WBTS_ALM[57]="61102" ; WBTS_ALM_REPORT[57]="Alarm indication signal on multiplexer section";  
+  WBTS_ALM[58]="61103" ; WBTS_ALM_REPORT[58]="Remote defect indication on multiplexer section";  
+  WBTS_ALM[59]="61104" ; WBTS_ALM_REPORT[59]="Excessive bit error rate";  
+  WBTS_ALM[60]="61105" ; WBTS_ALM_REPORT[60]="Loss of pointer on administrative unit";  
+  WBTS_ALM[61]="61106" ; WBTS_ALM_REPORT[61]="Alarm indication signal on administrative unit";  
+  WBTS_ALM[62]="61107" ; WBTS_ALM_REPORT[62]="Unequipped High Order Path";  
+  WBTS_ALM[63]="61108" ; WBTS_ALM_REPORT[63]="Payload label mismatch on High Order Path";  
+  WBTS_ALM[64]="61109" ; WBTS_ALM_REPORT[64]="Remote defect indication on High Order Path";  
+  WBTS_ALM[65]="61150" ; WBTS_ALM_REPORT[65]="Loss of multiframe";  
+  WBTS_ALM[66]="61151" ; WBTS_ALM_REPORT[66]="Alarm indication signal";  
+  WBTS_ALM[67]="61152" ; WBTS_ALM_REPORT[67]="Remote defect indication";  
+  WBTS_ALM[68]="61170" ; WBTS_ALM_REPORT[68]="Loss of IMA frame";  
+  WBTS_ALM[69]="61171" ; WBTS_ALM_REPORT[69]="IMA link out of delay synchronization";  
+  WBTS_ALM[70]="61172" ; WBTS_ALM_REPORT[70]="IMA remote failure indication";  
+  WBTS_ALM[71]="61175" ; WBTS_ALM_REPORT[71]="Far end transmit link unusable";  
+  WBTS_ALM[72]="61176" ; WBTS_ALM_REPORT[72]="Far end receive link unusable";  
+  WBTS_ALM[73]="61177" ; WBTS_ALM_REPORT[73]="Far end group start-up";  
+  WBTS_ALM[74]="61178" ; WBTS_ALM_REPORT[74]="Configuration abort state";  
+  WBTS_ALM[75]="61179" ; WBTS_ALM_REPORT[75]="Far end configuration abort state";  
+  WBTS_ALM[76]="61180" ; WBTS_ALM_REPORT[76]="Insufficient links";  
+  WBTS_ALM[77]="61181" ; WBTS_ALM_REPORT[77]="Far end insufficient links";  
+  WBTS_ALM[78]="61183" ; WBTS_ALM_REPORT[78]="Group timing mismatch";  
+  WBTS_ALM[79]="61260" ; WBTS_ALM_REPORT[79]="STC connection to signalling peer not established";  
+  WBTS_ALM[80]="61400" ; WBTS_ALM_REPORT[80]="Licence missing";  
+  WBTS_ALM[81]="61601" ; WBTS_ALM_REPORT[81]="Pseudowire down in ingress direction";  
+  WBTS_ALM[82]="61602" ; WBTS_ALM_REPORT[82]="Pseudowire down in egress direction";  
+  WBTS_ALM[83]="3117" ; WBTS_ALM_REPORT[83]="FAILURE IN SAAL UNI SIGNALLING LINK ACTIVATION";  
+  WBTS_ALM[84]="3267" ; WBTS_ALM_REPORT[84]="AAL TYPE 2 CAC REJECTION LEVEL EXCEEDED FOR AAL TYPE 2 PATH"; 
+  WBTS_ALM[85]="3129" ; WBTS_ALM_REPORT[85]="AAL TYPE 2 RESET FAILED"; 
+  WBTS_ALM[86]="7786" ; WBTS_ALM_REPORT[86]="WCDMA BASE STATION OUT OF USE";  
+  WBTS_ALM[87]="3101" ; WBTS_ALM_REPORT[87]="INTERNAL FAILURE IN SAAL STACK";  
+  
+  if(WBTS_ALM_NUMBER=="0")
+   pause(10,"Unknown WBTS Alarm number, check the Log file"); 
+   ALM_WBTS="FAILURE READING ALARM - REVIEW MANUALY/CHECK SCRIPT";
+  else
+   //print(" Received WBTS ALM CODE: %s\n",WBTS_ALM_NUMBER);
+   for(z=1;z<=87;z++) 
+     if( WBTS_ALM[z] == WBTS_ALM_NUMBER )
+        ALM_WBTS = WBTS_ALM[z] + "_" + WBTS_ALM_REPORT[z]; 
+        //print("WBTS ALARM : %s %s \n\n",WBTS_ALM[z],WBTS_ALM_REPORT[z]);
+        break ;
+     endif 
+   endfor
+  endif
+  //print("respuesta %s \n",ALM_WBTS);
+  return ALM_WBTS;
+endfunction 
+
+string function PING_WBTS(string wbtsip)  
+// Si un site fue pingueado se ejecuta esta funcion pero repitiendo el ping 30 veces.   
+  string  wbtsping,line;
+   
+  print("\nTesting WBTS IP Connectivity.....");      
+  tx("ZQRX::IP=%s:PING;",wbtsip); 
+  if(getline(line,"'0 packets received'")) 
+   wbtsping="FAIL"; print("PING-FAIL"); 
+  elseif(getline(line,"'IP ADDRESS IS ILLEGAL'"))
+   wbtsping="FAIL"; print("PING-FAIL");
+  else
+   print("PING-OK");
+   wbtsping="";
+  endif
+  return wbtsping;    
+endfunction
+
+string function WBTS_DATA(string wbtsid)
+// Ingresa la ID del WBTS y se devuelve UBA+Nombre del site
+  integer z=1;
+  string   WBTS_ID[],WBTS_Name[],WBTS_Location[],WBTS_NAME;
+  
+  WBTS_ID[1]="7673"; WBTS_Name[1]="UBA024"; WBTS_Location[1]="ECP Bahia Blanca";				
+  WBTS_ID[2]="6025"; WBTS_Name[2]="UBA029"; WBTS_Location[2]="Benito Juarez";				
+  WBTS_ID[3]="7773"; WBTS_Name[3]="UBA038"; WBTS_Location[3]="Cañuelas";				
+  WBTS_ID[4]="6046"; WBTS_Name[4]="UBA065"; WBTS_Location[4]="Dolores I";				
+  WBTS_ID[5]="7752"; WBTS_Name[5]="UBA068"; WBTS_Location[5]="Miramar";				
+  WBTS_ID[6]="7661"; WBTS_Name[6]="UBA074"; WBTS_Location[6]="Villa Gessell 1";				
+  WBTS_ID[7]="7639"; WBTS_Name[7]="UBA076"; WBTS_Location[7]="Pinamar 1";				
+  WBTS_ID[8]="7640"; WBTS_Name[8]="UBA077"; WBTS_Location[8]="San Bernardo";				
+  WBTS_ID[9]="7712"; WBTS_Name[9]="UBA081"; WBTS_Location[9]="Mar del Plata ECP";				
+  WBTS_ID[10]="7761"; WBTS_Name[10]="UBA098"; WBTS_Location[10]="";				
+  WBTS_ID[11]="6035"; WBTS_Name[11]="UBA111"; WBTS_Location[11]="Maipu";				
+  WBTS_ID[12]="6029"; WBTS_Name[12]="UBA112"; WBTS_Location[12]="Coronel Vidal";				
+  WBTS_ID[13]="6072"; WBTS_Name[13]="UBA116"; WBTS_Location[13]="Del Monte";				
+  WBTS_ID[14]="6058"; WBTS_Name[14]="UBA127"; WBTS_Location[14]="Pehuajo";				
+  WBTS_ID[15]="7757"; WBTS_Name[15]="UBA143"; WBTS_Location[15]="Rauch";				
+  WBTS_ID[16]="6067"; WBTS_Name[16]="UBA145"; WBTS_Location[16]="Rivadavia 1";				
+  WBTS_ID[17]="6026"; WBTS_Name[17]="UBA148"; WBTS_Location[17]="Pigue";				
+  WBTS_ID[18]="6082"; WBTS_Name[18]="UBA162"; WBTS_Location[18]="San Vicente";				
+  WBTS_ID[19]="6050"; WBTS_Name[19]="UBA171"; WBTS_Location[19]="30 de Agosto";				
+  WBTS_ID[20]="6055"; WBTS_Name[20]="UBA172"; WBTS_Location[20]="Trenque Lauquen I";				
+  WBTS_ID[21]="6012"; WBTS_Name[21]="UBA177"; WBTS_Location[21]="Medanos";				
+  WBTS_ID[22]="7641"; WBTS_Name[22]="UBA189"; WBTS_Location[22]="San Clemente";				
+  WBTS_ID[23]="6033"; WBTS_Name[23]="UBA192"; WBTS_Location[23]="";				
+  WBTS_ID[24]="7753"; WBTS_Name[24]="UBA193"; WBTS_Location[24]="Chapadmalal";				
+  WBTS_ID[25]="7677"; WBTS_Name[25]="UBA194"; WBTS_Location[25]="Puerto Belgrano";				
+  WBTS_ID[26]="6084"; WBTS_Name[26]="UBA198"; WBTS_Location[26]="Navarro";				
+  WBTS_ID[27]="7664"; WBTS_Name[27]="UBA201"; WBTS_Location[27]="Correo (Bahía Blanca 2)";				
+  WBTS_ID[28]="7634"; WBTS_Name[28]="UBA202"; WBTS_Location[28]="Independencia (Mar del Plata 3)";				
+  WBTS_ID[29]="7721"; WBTS_Name[29]="UBA205"; WBTS_Location[29]="Olavarria 2";				
+  WBTS_ID[30]="7758"; WBTS_Name[30]="UBA206"; WBTS_Location[30]="Azul 2";				
+  WBTS_ID[31]="6013"; WBTS_Name[31]="UBA207"; WBTS_Location[31]="";				
+  WBTS_ID[32]="6073"; WBTS_Name[32]="UBA209"; WBTS_Location[32]="";				
+  WBTS_ID[33]="6059"; WBTS_Name[33]="UBA210"; WBTS_Location[33]="Belgrano";				
+  WBTS_ID[34]="6018"; WBTS_Name[34]="UBA211"; WBTS_Location[34]="Balcarce";				
+  WBTS_ID[35]="7635"; WBTS_Name[35]="UBA213"; WBTS_Location[35]="Punta Mogotes";				
+  WBTS_ID[36]="6075"; WBTS_Name[36]="UBA214"; WBTS_Location[36]="";				
+  WBTS_ID[37]="7642"; WBTS_Name[37]="UBA219"; WBTS_Location[37]="Mar del Tuyú";				
+  WBTS_ID[38]="7717"; WBTS_Name[38]="UBA229"; WBTS_Location[38]="Tandil 2";				
+  WBTS_ID[39]="7716"; WBTS_Name[39]="UBA230"; WBTS_Location[39]="Necochea 2";				
+  WBTS_ID[40]="6021"; WBTS_Name[40]="UBA232"; WBTS_Location[40]="Santa Clara del Mar";				
+  WBTS_ID[41]="7633"; WBTS_Name[41]="UBA233"; WBTS_Location[41]="La Cochera (Mar del Plata 8)";				
+  WBTS_ID[42]="7626"; WBTS_Name[42]="UBA234"; WBTS_Location[42]="Polideportivo (Mar del Plata 9)";				
+  WBTS_ID[43]="7643"; WBTS_Name[43]="UBA237"; WBTS_Location[43]="Pinamar 2";				
+  WBTS_ID[44]="7718"; WBTS_Name[44]="UBA238"; WBTS_Location[44]="Tandil DCS";				
+  WBTS_ID[45]="7665"; WBTS_Name[45]="UBA240"; WBTS_Location[45]="Bahía Blanca 3";				
+  WBTS_ID[46]="6015"; WBTS_Name[46]="UBA245"; WBTS_Location[46]="Loberia Nuevo";				
+  WBTS_ID[47]="6032"; WBTS_Name[47]="UBA246"; WBTS_Location[47]="Ayacucho";				
+  WBTS_ID[48]="6051"; WBTS_Name[48]="UBA249"; WBTS_Location[48]="Bolivar I";				
+  WBTS_ID[49]="6090"; WBTS_Name[49]="UBA256"; WBTS_Location[49]="Glew";				
+  WBTS_ID[50]="7636"; WBTS_Name[50]="UBA258"; WBTS_Location[50]="APAND (Mar del Plata 14)";				
+  WBTS_ID[51]="6034"; WBTS_Name[51]="UBA259"; WBTS_Location[51]="Madariaga";				
+  WBTS_ID[52]="7713"; WBTS_Name[52]="UBA261"; WBTS_Location[52]="Necochea 3";				
+  WBTS_ID[53]="7609"; WBTS_Name[53]="UBA263"; WBTS_Location[53]="Puerto-Mar del Plata 12";				
+  WBTS_ID[54]="7620"; WBTS_Name[54]="UBA264"; WBTS_Location[54]="Terminal";				
+  WBTS_ID[55]="7644"; WBTS_Name[55]="UBA266"; WBTS_Location[55]="Cariló";				
+  WBTS_ID[56]="7645"; WBTS_Name[56]="UBA267"; WBTS_Location[56]="Villa Gessell 2";				
+  WBTS_ID[57]="7754"; WBTS_Name[57]="UBA304"; WBTS_Location[57]="Batan";				
+  WBTS_ID[58]="7619"; WBTS_Name[58]="UBA308"; WBTS_Location[58]="Constitución (Via Apia)";				
+  WBTS_ID[59]="7630"; WBTS_Name[59]="UBA309"; WBTS_Location[59]="Diagonal Pueyrredón (Mar del Plata 15)";				
+  WBTS_ID[60]="7601"; WBTS_Name[60]="UBA310"; WBTS_Location[60]="Ciromar (Mar del Plata 16)";				
+  WBTS_ID[61]="7621"; WBTS_Name[61]="UBA311"; WBTS_Location[61]="Plaza Ramos (Mar del Plata 17)";				
+  WBTS_ID[62]="7615"; WBTS_Name[62]="UBA312"; WBTS_Location[62]="San Carlos (Mar del Plata 18)";				
+  WBTS_ID[63]="7666"; WBTS_Name[63]="UBA314"; WBTS_Location[63]="Canal 7 (Bahía Blanca 4)";				
+  WBTS_ID[64]="7631"; WBTS_Name[64]="UBA315"; WBTS_Location[64]="Plaza Mitre (Mar del Plata 19)";				
+  WBTS_ID[65]="7603"; WBTS_Name[65]="UBA316"; WBTS_Location[65]="Castorina";				
+  WBTS_ID[66]="7612"; WBTS_Name[66]="UBA318"; WBTS_Location[66]="Racing (Mar del Plata 22)";				
+  WBTS_ID[67]="7632"; WBTS_Name[67]="UBA319"; WBTS_Location[67]="Almafuerte (Mar del Plata 23)";				
+  WBTS_ID[68]="7616"; WBTS_Name[68]="UBA320"; WBTS_Location[68]="Pompeya (Mar del Plata 24)";				
+  WBTS_ID[69]="7622"; WBTS_Name[69]="UBA321"; WBTS_Location[69]="Casino (Mar del Plata 25)";				
+  WBTS_ID[70]="7646"; WBTS_Name[70]="UBA329"; WBTS_Location[70]="Mar de Ajó";				
+  WBTS_ID[71]="7770"; WBTS_Name[71]="UBA331"; WBTS_Location[71]="Ruta 88";				
+  WBTS_ID[72]="7674"; WBTS_Name[72]="UBA334"; WBTS_Location[72]="Parque Patagonia";				
+  WBTS_ID[73]="7784"; WBTS_Name[73]="UBA337"; WBTS_Location[73]="Huanguelen";				
+  WBTS_ID[74]="7638"; WBTS_Name[74]="UBA340"; WBTS_Location[74]="La Colina (Mar del Plata 35)";				
+  WBTS_ID[75]="7613"; WBTS_Name[75]="UBA342"; WBTS_Location[75]="Unzué";				
+  WBTS_ID[76]="7627"; WBTS_Name[76]="UBA344"; WBTS_Location[76]="El Gaucho";				
+  WBTS_ID[77]="7647"; WBTS_Name[77]="UBA346"; WBTS_Location[77]="San Clemente 2";				
+  WBTS_ID[78]="6038"; WBTS_Name[78]="UBA349"; WBTS_Location[78]="Maipu";				
+  WBTS_ID[79]="7670"; WBTS_Name[79]="UBA351"; WBTS_Location[79]="Juan Molina (Bahía Blanca 7)";				
+  WBTS_ID[80]="6086"; WBTS_Name[80]="UBA356"; WBTS_Location[80]="General Las Heras";				
+  WBTS_ID[81]="7611"; WBTS_Name[81]="UBA363"; WBTS_Location[81]="Aserradero";				
+  WBTS_ID[82]="7676"; WBTS_Name[82]="UBA365"; WBTS_Location[82]="Chiclana";				
+  WBTS_ID[83]="7675"; WBTS_Name[83]="UBA366"; WBTS_Location[83]="Aeropuerto";				
+  WBTS_ID[84]="7604"; WBTS_Name[84]="UBA367"; WBTS_Location[84]="El Galgo";				
+  WBTS_ID[85]="7667"; WBTS_Name[85]="UBA368"; WBTS_Location[85]="Panamá (Alem) (Bahía Blanca 9)";				
+  WBTS_ID[86]="7623"; WBTS_Name[86]="UBA397"; WBTS_Location[86]="Alfar";				
+  WBTS_ID[87]="7668"; WBTS_Name[87]="UBA398"; WBTS_Location[87]="Alsina Bahia Blanca 11";				
+  WBTS_ID[88]="6077"; WBTS_Name[88]="UBA399"; WBTS_Location[88]="";				
+  WBTS_ID[89]="6081"; WBTS_Name[89]="UBA400"; WBTS_Location[89]="San Vicente II";				
+  WBTS_ID[90]="7722"; WBTS_Name[90]="UBA404"; WBTS_Location[90]="Olavarria 3";				
+  WBTS_ID[91]="7720"; WBTS_Name[91]="UBA406"; WBTS_Location[91]="Tandil 3";				
+  WBTS_ID[92]="7614"; WBTS_Name[92]="UBA409"; WBTS_Location[92]="Aeropuerto MDQ";				
+  WBTS_ID[93]="7759"; WBTS_Name[93]="UBA412"; WBTS_Location[93]="Azul 3";				
+  WBTS_ID[94]="7755"; WBTS_Name[94]="UBA415"; WBTS_Location[94]="Sierra de Los Padres";				
+  WBTS_ID[95]="7783"; WBTS_Name[95]="UBA416"; WBTS_Location[95]="Parque Industrial";				
+  WBTS_ID[96]="7648"; WBTS_Name[96]="UBA418"; WBTS_Location[96]="Santa Teresita";				
+  WBTS_ID[97]="7637"; WBTS_Name[97]="UBA420"; WBTS_Location[97]="Parque Camet";				
+  WBTS_ID[98]="7649"; WBTS_Name[98]="UBA424"; WBTS_Location[98]="San Bernardo 2";				
+  WBTS_ID[99]="6023"; WBTS_Name[99]="UBA425"; WBTS_Location[99]="Mar Chiquita";				
+  WBTS_ID[100]="7650"; WBTS_Name[100]="UBA427"; WBTS_Location[100]="Villa Gesell 3";				
+  WBTS_ID[101]="7628"; WBTS_Name[101]="UBA428"; WBTS_Location[101]="Punta Iglesias";				
+  WBTS_ID[102]="7651"; WBTS_Name[102]="UBA429"; WBTS_Location[102]="Pinamar 3";				
+  WBTS_ID[103]="7669"; WBTS_Name[103]="UBA433"; WBTS_Location[103]="Country Pago Chico";				
+  WBTS_ID[104]="7672"; WBTS_Name[104]="UBA435"; WBTS_Location[104]="Bahía Blanca 16 - Don Bosco";				
+  WBTS_ID[105]="7748"; WBTS_Name[105]="UBA436"; WBTS_Location[105]="Carmen de Patagones";				
+  WBTS_ID[106]="7652"; WBTS_Name[106]="UBA454"; WBTS_Location[106]="Las Toninas";				
+  WBTS_ID[107]="7617"; WBTS_Name[107]="UBA455"; WBTS_Location[107]="Santa Celina";				
+  WBTS_ID[108]="7654"; WBTS_Name[108]="UBA459"; WBTS_Location[108]="Costa del Este";				
+  WBTS_ID[109]="7655"; WBTS_Name[109]="UBA461"; WBTS_Location[109]="Valeria del Mar";				
+  WBTS_ID[110]="6074"; WBTS_Name[110]="UBA485"; WBTS_Location[110]="";				
+  WBTS_ID[111]="6053"; WBTS_Name[111]="UBA490"; WBTS_Location[111]="Castelli 2";				
+  WBTS_ID[112]="6056"; WBTS_Name[112]="UBA496"; WBTS_Location[112]="";				
+  WBTS_ID[113]="6022"; WBTS_Name[113]="UBA499"; WBTS_Location[113]="";				
+  WBTS_ID[114]="6052"; WBTS_Name[114]="UBA603"; WBTS_Location[114]="Bolivar II";				
+  WBTS_ID[115]="7671"; WBTS_Name[115]="UBA608"; WBTS_Location[115]="General Cerri";				
+  WBTS_ID[116]="7656"; WBTS_Name[116]="UBA616"; WBTS_Location[116]="Santa Teresita 2";				
+  WBTS_ID[117]="6057"; WBTS_Name[117]="UBA619"; WBTS_Location[117]="Pehuajo II";				
+  WBTS_ID[118]="7657"; WBTS_Name[118]="UBA620"; WBTS_Location[118]="Mar del Tuyú 2";				
+  WBTS_ID[119]="7602"; WBTS_Name[119]="UBA653"; WBTS_Location[119]="Club Once Unidos";				
+  WBTS_ID[120]="7618"; WBTS_Name[120]="UBA654"; WBTS_Location[120]="Peralta Ramos (Mar del Plata 27)";				
+  WBTS_ID[121]="7624"; WBTS_Name[121]="UBA656"; WBTS_Location[121]="Mar del Plata 29 (Gascon)";				
+  WBTS_ID[122]="7605"; WBTS_Name[122]="UBA657"; WBTS_Location[122]="Mar del Plata 30 (Plaza del Agua)";				
+  WBTS_ID[123]="7629"; WBTS_Name[123]="UBA658"; WBTS_Location[123]="Mar del Plata 31 - Bosque Peralta Ramos";				
+  WBTS_ID[124]="7607"; WBTS_Name[124]="UBA659"; WBTS_Location[124]="Mar del Plata 32 Edison";				
+  WBTS_ID[125]="7658"; WBTS_Name[125]="UBA661"; WBTS_Location[125]="Villa Gessel 4";				
+  WBTS_ID[126]="6068"; WBTS_Name[126]="UBA664"; WBTS_Location[126]="Rivadavia 2";				
+  WBTS_ID[127]="6019"; WBTS_Name[127]="UBA669"; WBTS_Location[127]="";				
+  WBTS_ID[128]="7608"; WBTS_Name[128]="UBA670"; WBTS_Location[128]="Mar del Plata 33 (Polonia)";				
+  WBTS_ID[129]="7659"; WBTS_Name[129]="UBA672"; WBTS_Location[129]="Ruta 11 - 2";				
+  WBTS_ID[130]="7762"; WBTS_Name[130]="UBA701"; WBTS_Location[130]="";				
+  WBTS_ID[131]="6020"; WBTS_Name[131]="UBA705"; WBTS_Location[131]="";				
+  WBTS_ID[132]="6048"; WBTS_Name[132]="UBA718"; WBTS_Location[132]="Dolores 3";				
+  WBTS_ID[133]="7774"; WBTS_Name[133]="UBA719"; WBTS_Location[133]="";				
+  WBTS_ID[134]="6080"; WBTS_Name[134]="UBA720"; WBTS_Location[134]="San Vicente 3";				
+  WBTS_ID[135]="7786"; WBTS_Name[135]="UBA728"; WBTS_Location[135]="Navarro 2";				
+  WBTS_ID[136]="6089"; WBTS_Name[136]="UBA731"; WBTS_Location[136]="Glew 3";				
+  WBTS_ID[137]="7763"; WBTS_Name[137]="UBA740"; WBTS_Location[137]="";				
+  WBTS_ID[138]="7600"; WBTS_Name[138]="UBA743"; WBTS_Location[138]="Mar del Plata 35";				
+  WBTS_ID[139]="7625"; WBTS_Name[139]="UBA744"; WBTS_Location[139]="Mar del plata 36 (Falucho)";				
+  WBTS_ID[140]="7660"; WBTS_Name[140]="UBA748"; WBTS_Location[140]="Mar de Ajó 2";				
+  WBTS_ID[141]="7715"; WBTS_Name[141]="UBA751"; WBTS_Location[141]="Necochea 6";				
+  WBTS_ID[142]="7719"; WBTS_Name[142]="UBA752"; WBTS_Location[142]="Tandil 7";				
+  WBTS_ID[143]="6024"; WBTS_Name[143]="UBA753"; WBTS_Location[143]="Benito Juarez 2";				
+  WBTS_ID[144]="6027"; WBTS_Name[144]="UBA758"; WBTS_Location[144]="Pigüé 2";				
+  WBTS_ID[145]="7710"; WBTS_Name[145]="UBA772"; WBTS_Location[145]="Estrada";				
+  WBTS_ID[146]="7756"; WBTS_Name[146]="UBA774"; WBTS_Location[146]="";				
+  WBTS_ID[147]="6037"; WBTS_Name[147]="UBA778"; WBTS_Location[147]="Olavarria 6";				
+  WBTS_ID[148]="6036"; WBTS_Name[148]="UBA779"; WBTS_Location[148]="";				
+  WBTS_ID[149]="7751"; WBTS_Name[149]="UBA782"; WBTS_Location[149]="Miramar 2";				
+  WBTS_ID[150]="7760"; WBTS_Name[150]="UBA820"; WBTS_Location[150]="Azul 5";				
+  WBTS_ID[151]="7723"; WBTS_Name[151]="UBA821"; WBTS_Location[151]="Olavarria 4 New";				
+  WBTS_ID[152]="7785"; WBTS_Name[152]="UBA854"; WBTS_Location[152]="";				
+  WBTS_ID[153]="6054"; WBTS_Name[153]="UBA860"; WBTS_Location[153]="";				
+  WBTS_ID[154]="6014"; WBTS_Name[154]="UBAX21"; WBTS_Location[154]="";				
+  WBTS_ID[155]="7796"; WBTS_Name[155]="UPA033"; WBTS_Location[155]="";				
+  WBTS_ID[156]="6000"; WBTS_Name[156]="UPA040"; WBTS_Location[156]="";				
+  WBTS_ID[157]="7793"; WBTS_Name[157]="UPA051"; WBTS_Location[157]="La Adela (Rio Colorado)";				
+  WBTS_ID[158]="7730"; WBTS_Name[158]="UPA086"; WBTS_Location[158]="Santa Rosa 6";				
+  WBTS_ID[159]="7799"; WBTS_Name[159]="UPA089"; WBTS_Location[159]="";				
+  WBTS_ID[160]="7798"; WBTS_Name[160]="UPA095"; WBTS_Location[160]="Santa Rosa 8";				
+  WBTS_ID[161]="6001"; WBTS_Name[161]="UPA096"; WBTS_Location[161]="";				
+  WBTS_ID[162]="7731"; WBTS_Name[162]="UPA200"; WBTS_Location[162]="Calfucura - Santa Rosa 2 ";				
+  WBTS_ID[163]="7732"; WBTS_Name[163]="UPA201"; WBTS_Location[163]="Colonia Lagos Santa Rosa 5";				
+  WBTS_ID[164]="7733"; WBTS_Name[164]="UPA202"; WBTS_Location[164]="Aereopuerto Santa Rosa 4";				
+  WBTS_ID[165]="7729"; WBTS_Name[165]="UPA203"; WBTS_Location[165]="Santa Rosa 3";				
+  WBTS_ID[166]="7747"; WBTS_Name[166]="URN203"; WBTS_Location[166]="Vietma 2";				
+  WBTS_ID[167]="6134"; WBTS_Name[167]="UBA864"; WBTS_Location[167]="";	
+  if(wbtsid=="")
+   pause(5,"Unknown WBTS check your information"); 
+  else
+   while( 1<= z <= 167) 
+     if( WBTS_ID[z] == wbtsid )
+        WBTS_NAME = WBTS_Name[z] + "_" + WBTS_Location[z]; 
+        print("WBTS_Name: %s  \n\n",WBTS_NAME);
+        break ; 
+     else z++; endif    
+   endwhile
+  endif
+  return WBTS_NAME;
+endfunction 
+
+string function WBTS_VC(string atmif, integer vpi,string vc)
+// Calculo de los parametros de los VC WBTS, se devuelve el 
+// ancho de banda, tipo de celda CBR o UBS, nombre del canal y si esta o no Enable.
+  string vci,vci_cat="",vci_cps="",vci_wo="",line;
+  
+  tx("ZLCI:%s,VC:%d,%s;",atmif,vpi,vc);
+  vci= inttostr(vpi,DEC) + "      " + vc;
+  if(vc=="32")
+    if(getline(line," '%s'",vci)) strfetch(line,"25-29",vci); 
+    if(vci=="FREE") messagebox("VC32 DOES NOT EXIST"); endif endif
+  else
+  if(getline(line," '%s'",vci)) strfetch(line,"25-30",vci); endif endif
+  if(getline(line," 'INGRESS'")) strfetch(line,"14-16",vci_cat); endif
+  if(getline(line," 'US'")) strfetch(line,"43-47",vci_cps); endif
+  if(getline(line," 'LOCKED'")) strfetch(line,"27-35",vci_wo); endif
+  return vci=vci+" "+vci_cps+" "+vci_cat+" "+vci_wo;
+endfunction
+
+string function ANI(string wbtsid)
+  integer x;
+  string ANI;
+  
+  x=strtoint(wbtsid,DEC); 
+  if(x<10)                    ANI="A0000" +wbtsid +"001";
+    elseif(x>9   AND   x<100) ANI="A000" +wbtsid +"001";
+    elseif(x>99  AND  x<1000) ANI="A00" +wbtsid +"001";
+    elseif(x>999 AND x<10000) ANI="A0" + wbtsid+"001";
+  endif
+  return ANI;
+endfunction
+
+string function ROUTE(string ANI)
+  string line="";
+  
+  tx("ZRRI;");
+  if(getline(line," '%s'",ANI)) 
+    strfetch(line,"2-5",line); 
+  else
+    line="NO";
+  endif
+  return line;
+endfunction
+
+string function ROUTE_STAT(string rou)
+  string line="";
+  
+  tx("ZCRL:ROU=%s;",rou);
+  if(getline(line," '%s     '",rou)) 
+    print("%s\n",line);
+    strfetch(line,"11-15",line); 
+  endif
+  return line;
+endfunction
+
+string function FIND_ATMIF_VPI(string rou)
+  string temp,line,atmif,vpi;
+  
+  tx("ZLJI:ROU=%s;",rou);
+  if(getline(line," 'LOCAL'")) 
+    strscan(line,"%s %s %s %s",atmif,atmif,atmif,vpi); 
+  endif
+  temp=atmif +"_"+ vpi;
+ return temp;
+endfunction
+
+string function WBTS_TRS_IP(string aaif)
+  string line,wbtstrs="";
+  
+  tx("ZQRI:OMU,:%s;",aaif); 
+  if(getline(line," '->'"))
+    strscan(line,"%s",wbtstrs);       
+    strfetch(wbtstrs," '->':3-",wbtstrs); 
+    wbtstrs=strreplace(wbtstrs," ","");
+  elseif (getline(line," '/*** SEMANTIC ERROR ***/'"))
+   wbtstrs="ERROR";
+  endif
+  if(wbtstrs=="")  
+    wbtstrs="ERROR"; 
+  endif
+  return wbtstrs;
+endfunction
+
+string function WBTS_IP(string wbtstrs) 
+  string line,a,b,c,d;
+  integer wbts;
+  
+  line=strreplace(wbtstrs,"."," ");
+  strscan(line,"%s %s %s %s",a,b,c,d);  
+  wbts=strtoint(d,DEC)+1;
+  line= a + "." + b + "." + c + "." + inttostr(wbts,DEC) ; 
+  if(wbtstrs=="ERROR")   line="ERROR";    endif
+  return line; 
+endfunction
+
+string function WBTS_DGW_IP(string wbtstrs) 
+  string line,a,b,c,d;
+  integer wbts;
+  
+  line=strreplace(wbtstrs,"."," ");
+  strscan(line,"%s %s %s %s",a,b,c,d);  
+  wbts=strtoint(d,DEC)-2;
+  line=a + "." + b +"." + c + "." + inttostr(wbts,DEC); 
+  if(wbtstrs=="ERROR")   line="ERROR";    endif
+  return line; 
+endfunction
+
+string function WBTS_NET_IP(string wbtstrs) 
+  string line,a,b,c,d;
+  integer wbts;
+  
+  line=strreplace(wbtstrs,"."," ");
+  strscan(line,"%s %s %s %s",a,b,c,d);  
+  wbts=strtoint(d,DEC)-3;
+  line=a + "." + b +"." + c + "." + inttostr(wbts,DEC); 
+  if(wbtstrs=="ERROR")   line="ERROR";    endif
+  return line;
+endfunction
+
+string function WBTS_VP(string atmif,string vpi)
+  string line,vpi_cat,vpi_cps,vpi_wo;
+  
+  tx("ZLCI:%s,VP:%s;",atmif,vpi);
+  if(getline(line," 'EGRESS'")) strfetch(line,"14-16",vpi_cat); endif
+  if(getline(line," 'US'")) strfetch(line,"43-47",vpi_cps); endif
+  if(getline(line," 'LOCKED'")) strfetch(line,"38-45",vpi_wo); endif
+  line=vpi_cat + " " + vpi_cps + " " +  vpi_wo;
+  return line;
+endfunction    
+  
+string function WBTS_ET(string vpi_cps)
+  string etnum;
+  integer temp;
+  
+  temp=strtoint(vpi_cps,DEC);
+  if(temp<4000) 
+    messagebox(" REVISE CONFIGURACION DE LOS ET!!!");
+   elseif(temp<4490) 
+    etnum="1"; 
+   elseif(temp<8981) etnum="2"; 
+   elseif(temp<13472) etnum="3";
+   elseif(temp<17962) etnum="4"; 
+   elseif(temp<22453) etnum="5"; 
+   elseif(temp<26944) etnum="6";
+   elseif(temp<31435) etnum="7"; 
+   elseif(temp<35925) etnum="8"; 
+   else print("REVISE CONFIGURACION DE LOS ET!!!"); 
+  endif  
+  return etnum; 
+endfunction
+
+void function MESSAGE_REPORT_WBTS(integer CRITICAL,integer MAYOR,integer MINOR,string sitesresume)
+// Regresa la cantidad total de alarmas menores, mayores y criticas
+  integer TOTAL_ALM;
+   
+  TOTAL_ALM = CRITICAL + MAYOR + MINOR; 
+  sitesresume = sitesresume + "\nTOTAL ALARMS: " + inttostr(TOTAL_ALM,DEC) + "\n\nCRITICAL: " + inttostr(CRITICAL,DEC) +  "\n\nMAYOR: " + inttostr(MAYOR,DEC) +"\n\nMINOR: " + inttostr(MINOR,DEC);
+  print("\nWBTS AlARMS RESUME\n\n"); print(sitesresume);
+  messagebox(sitesresume,"Alarmed Nodes");   
+endfunction 
+
+void function EXCELL_CELL_FILLOUT(integer WBTS,integer ROW,integer COL,string DATA)
+// Esta funcion rellena una celda excel en fila(row), columna(col) y el dato a poner en esa celda.
+  string a; 
+  a=strprint("R%dC%d",ROW,COL); 
+  ddedata(WBTS,a,strprint(DATA)); 
+  return;
+endfunction  
+
+string function EXCELL_CELL_READ(integer WBTS,integer ROW,integer COL)
+// Esta funcion lee una celda excel en fila(row), columna(col) y retorna el valor leido.
+  string a; 
+  string DATA;
+  a=strprint("R%dC%d",ROW,COL); 
+  // print("%d\n",WBTS);
+  DATA=strtrim(dderequest(WBTS,a),TRIM_LEADING_SPACE | TRIM_TRAILING_SPACE); 
+  return DATA;
+endfunction  
+
+integer function EXCELL_FILE_OPEN(string ExcelFile)
+ integer Num,WBTS;
+  string  ExcelSheet,c;
+    
+  if(NOT fileaccess(ExcelFile)) print("file not found: %s\n",ExcelFile); endif
+  _SHA_RunExcel(); Num=ddeconnect("Excel","System");
+  if(Num==0) print("Unable to start DDE session\n"); endif print("connected to Excel...\n"); 
+  c=strprint("\[CLOSE.ALL]\[ERROR(TRUE)]\[OPEN('%s')]",ExcelFile); c=strreplace(c,"'","\"");
+  if(0==ddecommand(Num,c,3)) abort(0,c); endif 
+  if(0==ddecommand(Num,"[ERROR(FALSE)]",5)) ddedisconnect(Num);
+   messagebox("Excel does not respond.\r",MB_OK); endif  
+  ExcelSheet=ACCESO_REMOTO();    
+  WBTS=ddeconnect("Excel",ExcelSheet);
+  if(NOT WBTS) ddedisconnect(Num); messagebox("WBTS not found.\r",MB_OK); endif 
+  print("Connected to work sheet...\n");
+  print("funcion excel open retorna %d ",WBTS); 
+  return WBTS;
+endfunction
+
+string function BSC_OPEN_LOG(string BSCs )
+ string PCTime,filename;
+ integer handle; 
+ PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0; filename=BSCs + PCTime +".TXT";
+ handle = fileopen(filename,NEW); delay(400); print("Opening LOG File: %s\n",filename);
+ FILE_SQUARE(filename,handle); fileclose(handle);
+ logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+ return filename;
+endfunction
+
+void function PRINT_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4;
+ for(y=1 ; y<=x ; y++) print("#"); endfor print("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) print("#"); endfor print("\n");
+endfunction
+
+void function LOG_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor logprint("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor 
+ logprint("\n");
+endfunction
+
+void function FILE_SQUARE(string information, integer handle )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) fileprint(handle,"#"); endfor fileprint(handle,"\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) fileprint(handle,"#"); endfor 
+ fileprint(handle,"\n");
+endfunction
+
+string function OPEN_FILE(string file )
+ string PCTime,filename;
+ integer handle=0; 
+ PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); filename = file + PCTime +".TXT";
+ handle = fileopen(filename,NEW); 
+ FILE_SQUARE(filename,handle); fileclose(handle);
+ return filename;
+endfunction
+
+void function GET_WBTS_ID(integer WBTS)
+  string line,temp;
+  integer ROW=4;
+
+  tx("ZRRI;"); 
+  while(getline(line," 'A0'"))
+    strscan(line,"%s %s %s %s %s",temp,temp,temp,temp,temp); 
+    strfetch(temp,"3-6",temp); 
+    EXCELL_CELL_FILLOUT(WBTS,ROW,7,"MACRO");
+    EXCELL_CELL_FILLOUT(WBTS,ROW,7,temp); ROW++;
+  endwhile
+return;
+endfunction
+
+string function WBTS_ALM_LOGGING (string wbtsname, string wbtslocation, string wbtsid, string wbtsip)
+ // Esta funcion crea y alamacenas las alarmas de los nodosB
+ integer handle;
+ string  filename,PCTime,line;
+
+ PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0;
+ filename="WBTS_" + wbtsname + "_" +wbtsid +"_"+ wbtslocation +"_"+ PCTime +".TXT";
+ handle = fileopen(filename,NEW); delay(400); 
+ //print("Saving WBTS Log: %s\n",filename);
+ fileprint(handle,"# WBTS-name= %s WBTS-location= %s \n\n",wbtsname,wbtslocation);       
+ fileprint(handle,"# WBTS-ID= %s WBTS-IP= %s \n\n",wbtsid,wbtsip);       
+ fileclose(handle);
+ logenable(LOG_ENABLE_ALL); 
+ logset(filename,APPEND); 
+
+ LOG_SQUARE("NODEB PINGING" ); tx("ZQRX::IP=%s:PING;\n",wbtsip);
+ if(getline(line,"'1 packets received'")) else PING_WBTS(wbtsip); endif
+ LOG_SQUARE("NODEB ACTIVE ALARMS" ); tx("ZAAP:WBTS,%s;",wbtsid); 
+ LOG_SQUARE("NODEB ALARM HISTORY" ); tx("ZAHP:WBTS,%s;",wbtsid); 
+ LOG_SQUARE("THROUGHTPUT" ); tx("ZAHP:WBTS,%s::2010-01-01,,%s;",wbtsid,PCTime);
+ logclose();
+ return filename;       
+endfunction
+
+integer function EXCELL_FILE_OPEN_ALARM_REPORT(string ExcelFile)
+ integer Num,WBTS;
+  string  ExcelSheet,c;
+    
+  if(NOT fileaccess(ExcelFile)) print("file not found: %s\n",ExcelFile); endif
+  _SHA_RunExcel(); Num=ddeconnect("Excel","System");
+  if(Num==0) print("Unable to start DDE session\n"); endif print("connected to Excel...\n"); delay(3000);
+  c=strprint("\[CLOSE.ALL]\[ERROR(TRUE)]\[OPEN('%s')]",ExcelFile); c=strreplace(c,"'","\"");
+  if(0==ddecommand(Num,c,3)) abort(0,c); endif 
+  if(0==ddecommand(Num,"[ERROR(FALSE)]",5)) ddedisconnect(Num);
+   messagebox("Excel does not respond.\r",MB_OK); endif  
+  ExcelSheet="Collect";   /*Nombre del TAB donde se guardan las alarmas */
+  WBTS=ddeconnect("Excel",ExcelSheet);
+  if(NOT WBTS) ddedisconnect(Num); messagebox("WBTS not found.\r",MB_OK); endif 
+  print("Connected to work sheet...\n");
+  print("funcion excel open retorna %d ",WBTS); 
+  return WBTS;
+endfunction
+
+string function WBTS_ALM_LOGGING2 (string wbtsname, string wbtsid, string rnc, string region)
+ // Esta funcion crea y alamacenas las alarmas de los nodosB para toda la red de telcel.
+ // Setee la fecha de comienzo de busqueda.
+ integer handle;
+ string  filename,PCTime;
+
+ PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0;
+ filename=region+"_RNC_"+rnc+"_WBTS_" + wbtsname + "_" +wbtsid +"_"+ PCTime +".TXT";
+ handle = fileopen(filename,NEW); 
+ fileprint(handle,"# RNC= %s WBTS-name= %s \n\n",rnc,wbtsname);       
+ fileprint(handle,"# WBTS-ID= %s  \n\n",wbtsid);       
+ fileclose(handle);
+ logenable(LOG_ENABLE_ALL); 
+ logset(filename,APPEND); 
+ LOG_SQUARE("ALARMAS ACTIVAS" ); 
+ tx("ZAAP:WBTS,%s;",wbtsid); 
+ logclose();
+ return filename;
+         
+endfunction
+
+string function HIST_ALM_SUM(string filename)
+// De un log se toma la cantidad de alarmas criticas, mayores y menores
+  integer file_handle;
+  string  alm_cri="",alm_may="",alm_men="",line,temp="";
+   
+  file_handle = fileopen(filename,READ); 
+  //print("Buscando alarmas historicas de archivo:  %s \n",filename);      
+  if(filegetline(file_handle,line," '***' AND ';' ")) 
+    strscan(line,"%s %s %s %s",temp,temp,temp,alm_cri);
+  endif  
+  if(filegetline(file_handle,line," '**' AND ';' ")) 
+    strscan(line,"%s %s %s %s",temp,temp,temp,alm_may);
+  endif
+  if(filegetline(file_handle,line," '*' AND ';' "))  
+    strscan(line,"%s %s %s %s",temp,temp,temp,alm_men);
+  endif
+  temp="C"+alm_cri+"_"+"M"+alm_may+"_"+"P"+alm_men;
+  logclose();
+  return temp;   
+endfunction
+
+string function ACTIVE_ALM_SUMARY(string filename)
+// De un log se toma el total de alarmas activas en un NodoB
+  integer file_handle;
+  string  temp="",line;
+   
+  file_handle = fileopen(filename,READ); 
+  //print("Buscando total alarmas activas de archivo:  %s \n",filename);      
+  if(filegetline(file_handle,line," 'TOTAL:       = '")) strscan(line,"%s %s %s ",temp,temp,temp); endif    
+  logclose();
+  return temp;   
+endfunction
+
+string function HIST_ALM_DIA(string filename, string wbtsid)
+// De un log se toma la cantidad de alarmas criticas, mayores y menores
+
+  logenable(LOG_ENABLE_ALL); 
+  logset(filename,APPEND);  
+  LOG_SQUARE("ALARMAS HISTORICAS DEL DIA" ); 
+  tx("ZAHP:WBTS,%s;",wbtsid);              ////////////////////////////
+  logclose();
+  return "";
+endfunction
+
+string function ALARMA_ACTIVA_FECH(string filename, string rnc)
+  // De un log se toma la fecha y hora de la 1er alarma activa
+  integer file_handle;
+  string  fecha,line,temp,hora;
+   
+  file_handle = fileopen(filename,READ); 
+  //print("Leyendo fecha de la 1er alarma activa de archivo:  %s \n",filename);
+  if(filegetline(file_handle,line," '(' AND')' ")) 
+   strscan(line,"%s %s %s %s %s",temp,temp,temp,fecha,hora);  
+  endif
+  if(fecha=="") fecha="A_INTERM"; 
+  endif
+  return fecha + "__" + hora;
+endfunction
+
+string function AA_INTERFACE(string atmif,string vpi )
+  string AA="",line;
+  integer temp,temp2;
+  
+  temp=strtoint(atmif,DEC);
+  temp2=strtoint(vpi,DEC);  
+  tx("ZQMI:::%d,%d;",temp,temp2); 
+  if(getline(line," 'AA' ")) 
+    strscan(line,"%s %s %s",AA,AA,AA);
+  endif
+  return AA;
+endfunction
+
+string function IP_DEL_NODO(string wbtsid)
+string ani,temp,atmif,vpi2,wbtstrs,wbtsip,aaif;
+integer vpi,rou;
+
+  ani= ANI(wbtsid); 
+  rou=strtoint(ROUTE(ani),DEC); 
+  temp=inttostr(rou,DEC);
+  temp=FIND_ATMIF_VPI( temp);
+  temp=strreplace(temp,"_"," ");
+  strscan(temp,"%s %s",atmif,vpi2);
+  vpi=strtoint(vpi2,DEC); 
+  aaif=AA_INTERFACE(atmif,inttostr(vpi,DEC));
+  wbtstrs=WBTS_TRS_IP(aaif);
+  wbtsip=WBTS_IP(wbtstrs);
+  return wbtsip;
+endfunction
+
+string function WBTS_ALM_LOGGING3 (string wbtsname, string wbtsid, string rnc, string region)
+ // Esta funcion crea y alamacenas las alarmas de los nodosB para toda la red de telcel.
+ // Setee la fecha de comienzo de busqueda.
+ integer handle;
+ string  filename,PCTime;
+
+ PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0;
+ filename=region+"_RNC_"+rnc+"_WBTS_" + wbtsname + "_" +wbtsid +"_"+ PCTime +"_NO_ACTIVE_ALM.TXT";
+ handle = fileopen(filename,NEW); 
+ fileprint(handle,"# RNC= %s WBTS-name= %s \n\n",rnc,wbtsname);       
+ fileprint(handle,"# WBTS-ID= %s  \n\n",wbtsid);       
+ fileclose(handle);
+ logenable(LOG_ENABLE_ALL); 
+ logset(filename,APPEND); 
+ LOG_SQUARE("ALARMAS ACTIVAS" ); 
+ tx("ZAAP:WBTS,%s;",wbtsid); 
+ LOG_SQUARE("ALARMAS HISTORICAS" ); 
+ tx("ZAHP:WBTS,%s;",wbtsid); 
+ logclose();
+ return filename;
+endfunction
+
+function BORRAR_LOGmm(string filename)
+  winexec(strprint("CMD /C DEL %s",filename));
+endfunction
+
+function BORRAR_LOG(string filename)
+  winexec(strprint("DEL %s",filename));
+endfunction
+
+/////////////////////////////////////////////////////////////////
+
+
+string function ALARMA_ACTIVA_FECH2(string filename, string rnc)
+  // De un log se toma la fecha y hora de la 1er alarma activa
+  integer file_handle;
+  string  fecha,line,temp,hora;
+   
+  file_handle = fileopen(filename,READ); 
+  //print("Leyendo fecha de la 1er alarma activa de archivo:  %s \n",filename);
+  if(filegetline(file_handle,line," '(' AND')' ")) 
+   strscan(line,"%s %s %s %s %s",temp,temp,temp,fecha,hora);  
+  endif
+  if(fecha=="") fecha="A_INTERM"; 
+  endif
+  return fecha + "__" + hora;
+endfunction
+
+string function ALARMA_ACTIVA_FECHA_HORA(string filename)
+  // De un log se toma la fecha y hora de la 1er alarma activa
+  integer file_handle,x=1,y=1; //count=1000;
+  string  fecha[],line,temp,hora[];
+   
+  file_handle = fileopen(filename,READ); 
+  //print("Leyendo fecha y hora de las alarmas activas de archivo:  %s \n",filename);
+  while(filegetline(file_handle,line))
+    
+  while(filegetline(file_handle,line," '    (' AND')' ")) 
+   strscan(line,"%s %s %s %s %s",temp,temp,temp,fecha[x],hora[x]);  
+  x++;
+  endwhile
+
+  endwhile
+  x=x-1;
+  temp=inttostr(x,DEC) + "_";
+  for(y=1;y<=x;y++) temp=temp + fecha[y]+"_"+ hora[y] + "_";  
+//  print("estas son las fechas y horas %s\n",temp);
+  endfor
+  return temp;
+
+endfunction
+
+string function WBTS_ALM_CODE2(string filename)
+  // De un log de WBTS se toman los codigos de alarma
+  integer file_handle,count=3000,y=1,z;
+  string  temp="",line="",x[];
+   
+  file_handle = fileopen(filename,READ); 
+  while(1) 
+    if(fileread(file_handle,line,count) )    
+      while(filegetline(file_handle,line," '    3' OR '    61' OR  '    7'" )) 
+       strfetch(line,"5-8",x[y]); y++;
+      endwhile 
+    else
+      break;  
+    endif
+  endwhile
+  y=y-1; z=y; temp="";
+  for(z=1;z<=y;z++) temp=temp + x[z]+ "_"; endfor
+  z=z-1;
+  return temp;
+endfunction
+
+string function WBTS_ALARMS2(string WBTS_ALM_NUMBER)
+  integer z=1;
+  string WBTS_ALM[],WBTS_ALM_REPORT[],ALM_WBTS;
+
+//Se pueden añadir lineas para analizar nuevas alarmas, aumentar la busqueda de alarmas, el ultimo fue 85
+  WBTS_ALM[1]="7401" ; WBTS_ALM_REPORT[1]="EXTERNAL AL 1"; 
+  WBTS_ALM[2]="7402" ; WBTS_ALM_REPORT[2]="EXTERNAL AL 2"; 
+  WBTS_ALM[3]="7403" ; WBTS_ALM_REPORT[3]="EXTERNAL AL 3";
+  WBTS_ALM[4]="7404" ; WBTS_ALM_REPORT[4]="EXTERNAL AL 4"; 
+  WBTS_ALM[5]="7405" ; WBTS_ALM_REPORT[5]="EXTERNAL AL 5"; 
+  WBTS_ALM[6]="7406" ; WBTS_ALM_REPORT[6]="EXTERNAL AL 6"; 
+  WBTS_ALM[7]="7407" ; WBTS_ALM_REPORT[7]="EXTERNAL AL 7"; 
+  WBTS_ALM[8]="7408" ; WBTS_ALM_REPORT[8]="EXTERNAL AL 8"; 
+  WBTS_ALM[9]="7409" ; WBTS_ALM_REPORT[9]="EXTERNAL AL 9"; 
+  WBTS_ALM[10]="7410" ; WBTS_ALM_REPORT[10]="EXTERNAL AL 10"; 
+  WBTS_ALM[11]="7411" ; WBTS_ALM_REPORT[11]="EXTERNAL AL 11"; 
+  WBTS_ALM[12]="7412" ; WBTS_ALM_REPORT[12]="EXTERNAL AL 12"; 
+  WBTS_ALM[13]="7413" ; WBTS_ALM_REPORT[13]="EXTERNAL AL 13"; 
+  WBTS_ALM[14]="7414" ; WBTS_ALM_REPORT[14]="EXTERNAL AL 14"; 
+  WBTS_ALM[15]="7415" ; WBTS_ALM_REPORT[15]="EXTERNAL AL 15"; 
+  WBTS_ALM[16]="7416" ; WBTS_ALM_REPORT[16]="EXTERNAL AL 16"; 
+  WBTS_ALM[17]="7417" ; WBTS_ALM_REPORT[17]="EXTERNAL AL 17"; 
+  WBTS_ALM[18]="7418" ; WBTS_ALM_REPORT[18]="EXTERNAL AL 18"; 
+  WBTS_ALM[19]="7419" ; WBTS_ALM_REPORT[19]="EXTERNAL AL 19"; 
+  WBTS_ALM[20]="7420" ; WBTS_ALM_REPORT[20]="EXTERNAL AL 20"; 
+  WBTS_ALM[21]="7421" ; WBTS_ALM_REPORT[21]="EXTERNAL AL 21"; 
+  WBTS_ALM[22]="7422" ; WBTS_ALM_REPORT[22]="EXTERNAL AL 22"; 
+  WBTS_ALM[23]="7423" ; WBTS_ALM_REPORT[23]="EXTERNAL AL 23"; 
+  WBTS_ALM[24]="7424" ; WBTS_ALM_REPORT[24]="EXTERNAL AL 24"; 
+  WBTS_ALM[25]="7425" ; WBTS_ALM_REPORT[25]="EXTERNAL AL 25"; 
+  WBTS_ALM[26]="7650" ; WBTS_ALM_REPORT[26]="BASE STATION FAULTY";
+  WBTS_ALM[27]="7651" ; WBTS_ALM_REPORT[27]="BASE STATION OPERATION DEGRADED"; 
+  WBTS_ALM[28]="7652" ; WBTS_ALM_REPORT[28]="BASE STATION NOTIFICATION"; 
+  WBTS_ALM[29]="7653" ; WBTS_ALM_REPORT[29]="CELL FAULTY"; 
+  WBTS_ALM[30]="7654" ; WBTS_ALM_REPORT[30]="CELL OPERATION DEGRADED"; 
+  WBTS_ALM[31]="7655" ; WBTS_ALM_REPORT[31]="CELL NOTIFICATION"; 
+  WBTS_ALM[32]="7660" ; WBTS_ALM_REPORT[32]="BASE STATION LICENCE EXPIRED"; 
+  WBTS_ALM[33]="7661" ; WBTS_ALM_REPORT[33]="BASE STATION LICENCE NOTIFICATION"; 
+  WBTS_ALM[34]="7665" ; WBTS_ALM_REPORT[34]="BASE STATION TRANSMISSION ALARM"; 
+  WBTS_ALM[35]="7740" ; WBTS_ALM_REPORT[35]="BEATING WCDMA BTS ALARM"; 
+  WBTS_ALM[36]="7750" ; WBTS_ALM_REPORT[36]="FAILURE IN WCDMA WBTS O&M CONNECTION"; 
+  WBTS_ALM[37]="7761" ; WBTS_ALM_REPORT[37]="RNW O&M SCENARIO FAILURE"; 
+  WBTS_ALM[38]="7762" ; WBTS_ALM_REPORT[38]="RNW DATABASE OPERATION FAILURE"; 
+  WBTS_ALM[39]="7771" ; WBTS_ALM_REPORT[39]="WCDMA CELL OUT OF USE"; 
+  WBTS_ALM[40]="7772" ; WBTS_ALM_REPORT[40]="HSDPA CONFIGURATION FAILED"; 
+  WBTS_ALM[41]="7775" ; WBTS_ALM_REPORT[41]="INCONSISTENCY IN WCEL CONFIGURATION PARAMETERS"; 
+  WBTS_ALM[42]="7776" ; WBTS_ALM_REPORT[42]="HSDPA FAILURE IN WCEL"; 
+  WBTS_ALM[43]="7778" ; WBTS_ALM_REPORT[43]="CDMA BTS DEDICATED MEASUREMENT FAILURE"; 
+  WBTS_ALM[44]="7779" ; WBTS_ALM_REPORT[44]="RECOVERY ACTIONS ONGOING"; 
+  WBTS_ALM[45]="7780" ; WBTS_ALM_REPORT[45]="HSUPA FAILURE IN WCEL"; 
+  WBTS_ALM[46]="7782" ; WBTS_ALM_REPORT[46]="HSUPA CONFIGURATION FAILED"; 
+  WBTS_ALM[47]="7799" ; WBTS_ALM_REPORT[47]="RNC RADIO NETWORK TEST ALARM"; 
+  WBTS_ALM[48]="61006" ; WBTS_ALM_REPORT[48]="FTM booted"; 
+  WBTS_ALM[49]="61010" ; WBTS_ALM_REPORT[49]="BTS reset required"; 
+  WBTS_ALM[50]="61028" ; WBTS_ALM_REPORT[50]="Loss of frame";  
+  WBTS_ALM[51]="61029" ; WBTS_ALM_REPORT[51]="Loss of signal";  
+  WBTS_ALM[52]="61040" ; WBTS_ALM_REPORT[52]="Interface under test";  
+  WBTS_ALM[53]="61050" ; WBTS_ALM_REPORT[53]="No inserted or non-compliant SFP module";  
+  WBTS_ALM[54]="61057" ; WBTS_ALM_REPORT[54]="Loss of cell delineation on ATM interface";  
+  WBTS_ALM[55]="61058" ; WBTS_ALM_REPORT[55]="Synchronisation lost";  
+  WBTS_ALM[56]="61059" ; WBTS_ALM_REPORT[56]="Timing source lost";  
+  WBTS_ALM[57]="61102" ; WBTS_ALM_REPORT[57]="Alarm indication signal on multiplexer section";  
+  WBTS_ALM[58]="61103" ; WBTS_ALM_REPORT[58]="Remote defect indication on multiplexer section";  
+  WBTS_ALM[59]="61104" ; WBTS_ALM_REPORT[59]="Excessive bit error rate";  
+  WBTS_ALM[60]="61105" ; WBTS_ALM_REPORT[60]="Loss of pointer on administrative unit";  
+  WBTS_ALM[61]="61106" ; WBTS_ALM_REPORT[61]="Alarm indication signal on administrative unit";  
+  WBTS_ALM[62]="61107" ; WBTS_ALM_REPORT[62]="Unequipped High Order Path";  
+  WBTS_ALM[63]="61108" ; WBTS_ALM_REPORT[63]="Payload label mismatch on High Order Path";  
+  WBTS_ALM[64]="61109" ; WBTS_ALM_REPORT[64]="Remote defect indication on High Order Path";  
+  WBTS_ALM[65]="61150" ; WBTS_ALM_REPORT[65]="Loss of multiframe";  
+  WBTS_ALM[66]="61151" ; WBTS_ALM_REPORT[66]="Alarm indication signal";  
+  WBTS_ALM[67]="61152" ; WBTS_ALM_REPORT[67]="Remote defect indication";  
+  WBTS_ALM[68]="61170" ; WBTS_ALM_REPORT[68]="Loss of IMA frame";  
+  WBTS_ALM[69]="61171" ; WBTS_ALM_REPORT[69]="IMA link out of delay synchronization";  
+  WBTS_ALM[70]="61172" ; WBTS_ALM_REPORT[70]="IMA remote failure indication";  
+  WBTS_ALM[71]="61175" ; WBTS_ALM_REPORT[71]="Far end transmit link unusable";  
+  WBTS_ALM[72]="61176" ; WBTS_ALM_REPORT[72]="Far end receive link unusable";  
+  WBTS_ALM[73]="61177" ; WBTS_ALM_REPORT[73]="Far end group start-up";  
+  WBTS_ALM[74]="61178" ; WBTS_ALM_REPORT[74]="Configuration abort state";  
+  WBTS_ALM[75]="61179" ; WBTS_ALM_REPORT[75]="Far end configuration abort state";  
+  WBTS_ALM[76]="61180" ; WBTS_ALM_REPORT[76]="Insufficient links";  
+  WBTS_ALM[77]="61181" ; WBTS_ALM_REPORT[77]="Far end insufficient links";  
+  WBTS_ALM[78]="61183" ; WBTS_ALM_REPORT[78]="Group timing mismatch";  
+  WBTS_ALM[79]="61260" ; WBTS_ALM_REPORT[79]="STC connection to signalling peer not established";  
+  WBTS_ALM[80]="61400" ; WBTS_ALM_REPORT[80]="Licence missing";  
+  WBTS_ALM[81]="61601" ; WBTS_ALM_REPORT[81]="Pseudowire down in ingress direction";  
+  WBTS_ALM[82]="61602" ; WBTS_ALM_REPORT[82]="Pseudowire down in egress direction";  
+  WBTS_ALM[83]="3117" ; WBTS_ALM_REPORT[83]="FAILURE IN SAAL UNI SIGNALLING LINK ACTIVATION";  
+  WBTS_ALM[84]="3267" ; WBTS_ALM_REPORT[84]="AAL TYPE 2 CAC REJECTION LEVEL EXCEEDED FOR AAL TYPE 2 PATH"; 
+  WBTS_ALM[85]="3129" ; WBTS_ALM_REPORT[85]="AAL TYPE 2 RESET FAILED"; 
+ 
+  if(WBTS_ALM_NUMBER=="0")
+   pause(10,"Unknown WBTS Alarm number, check the Log file"); 
+   ALM_WBTS="FAILURE READING ALARM - REVIEW MANUALY/CHECK SCRIPT";
+  else
+   //print(" Received WBTS ALM CODE: %s\n",WBTS_ALM_NUMBER);
+   for(z=1;z<=85;z++) 
+     if( WBTS_ALM[z] == WBTS_ALM_NUMBER )
+        ALM_WBTS = WBTS_ALM[z] + "_" + WBTS_ALM_REPORT[z]; 
+        print("WBTS ALARM : %s %s \n\n",WBTS_ALM[z],WBTS_ALM_REPORT[z]);
+        break ;
+     endif 
+   endfor
+  endif
+  return ALM_WBTS;
+endfunction
+
+string function WBTS_ALM_LOGGING4 (string PCTime2,string wbtsid, string rnc, string region)
+ // Esta funcion crea y alamacenas las alarmas de los nodosB para toda la red de telcel.
+ // Setee la fecha de comienzo de busqueda.
+ integer handle=0;
+ string  filename;
+ 
+ filename=region+"_RNC_"+rnc+"_WBTS_" + wbtsid +"_"+ PCTime2 +".TXT";
+ handle = fileopen(filename,NEW); 
+ fileprint(handle,"# RNC= %s \n\n",rnc);       
+ fileprint(handle,"# WBTS-ID= %s  \n\n",wbtsid);       
+ fileclose(handle);
+ logenable(LOG_ENABLE_ALL); 
+ logset(filename,APPEND); 
+ LOG_SQUARE("ALARMAS ACTIVAS" ); 
+ tx("ZAAP:WBTS,%s;",wbtsid); 
+ logclose();
+ return filename;
+         
+endfunction 
+
+integer function EXCELL_FILE_NODOSB_OOS(string ExcelFile)
+ integer Num,WBTS;
+  string  ExcelSheet,c;
+    
+  if(NOT fileaccess(ExcelFile)) print("file not found: %s\n",ExcelFile); endif
+  _SHA_RunExcel(); Num=ddeconnect("Excel","System");
+  if(Num==0) print("Unable to start DDE session\n"); endif print("connected to Excel...\n"); 
+  c=strprint("\[CLOSE.ALL]\[ERROR(TRUE)]\[OPEN('%s')]",ExcelFile); c=strreplace(c,"'","\"");
+  if(0==ddecommand(Num,c,3)) abort(0,c); endif 
+  if(0==ddecommand(Num,"[ERROR(FALSE)]",5)) ddedisconnect(Num);
+   messagebox("Excel does not respond.\r",MB_OK); endif  
+  ExcelSheet="NODOSB-FUERA";   /*Nombre del TAB donde se guardan las alarmas */
+  WBTS=ddeconnect("Excel",ExcelSheet);
+  if(NOT WBTS) ddedisconnect(Num); messagebox("TAB not found.\r",MB_OK); endif 
+  print("\nConnected to work sheet...%s \n",WBTS);
+  print("funcion excel open retorna %d \n ",WBTS); 
+  return WBTS;
+endfunction
+
+
+string function NodeB_WO(string rnc, string wbtsid)
+ string wbtsid2="",rnc2="", FLAG="OFF", NodeB_State="";
+ integer ROW2,WBTS;
+ 
+ print("recibido %s %s\n",rnc,wbtsid);
+ WBTS=ddeconnect("Excel","NODOB_STATUS");          
+ ROW2=2; 
+ 
+ while(FLAG=="OFF")     
+   rnc2=EXCELL_CELL_READ(WBTS,ROW2,4);  //Lee el RNC.
+   print("leyendo segundo rnc %s\r",rnc2);
+   if(rnc2=="") break; endif
+   if(rnc==rnc2)
+     wbtsid2=EXCELL_CELL_READ(WBTS,ROW2,2);
+     if(wbtsid==wbtsid2) 
+       ddedisconnect(WBTS); FLAG="ON"; NodeB_State="OPERANDO"; 
+     endif
+   endif
+   ROW2++; 
+  endwhile 
+
+ return NodeB_State;
+  
+endfunction

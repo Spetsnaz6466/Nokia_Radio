@@ -1,0 +1,28 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main(string rnc, string wbtsid)
+ string wbtsid2="",rnc2="", FLAG="OFF";
+ integer ROW2,WBTS;
+ 
+ wbtsid="1"; rnc="0";                   
+ while (wbtsid<>"") 
+  
+  ROW2=2; WBTS=ddeconnect("Excel","NODOB_STATUS");
+  
+  while(FLAG=="OFF")     
+   rnc2=EXCELL_CELL_READ(WBTS,ROW2,4); print("Collect rnc2 %s\n",rnc2); //Lee el RNC.
+   if(rnc2=="") break; endif
+   if(rnc==rnc2)
+     wbtsid2=EXCELL_CELL_READ(WBTS,ROW2,2);
+     if(wbtsid==wbtsid2) 
+       ddedisconnect(WBTS); FLAG="ON"; 
+     endif
+   endif
+   ROW2++; 
+  endwhile 
+  
+ endwhile
+  
+endfunction

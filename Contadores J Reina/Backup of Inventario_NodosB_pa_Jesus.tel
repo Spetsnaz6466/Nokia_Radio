@@ -1,0 +1,48 @@
+#include <shellapi.hit>
+
+function main()
+  string line,temp,PCTime;
+  string WBTS[],WCEL[],MEAS[];
+  integer Inventario_handle,Resultado,x=1,y,z,count=200;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="Inventatio_NodosB_" + PCTime + ".TXT";
+  Resultado=fileopen(temp,NEW);
+  fileprint(Resultado," WBTS WCEL M1006C25 M1006C26 M1006c27");
+  Inventario_handle = fileopen("contadores.txt",READ);
+    
+  while(fileread(Inventario_handle,line,count))
+    if(filegetline(Inventario_handle,line," 'M1006C' "))
+    print(line);
+      strscan(line,"%s %s %s %s %s %s %s %s %s %s",WBTS[x],WCEL[x],MEAS[x],MEAS[x],MEAS[x],MEAS[x],MEAS[x],MEAS[x],MEAS[x],MEAS[x]);   
+      print("%s %s %s\n",WBTS[x],WCEL[x],MEAS[x]);
+    endif
+    x++;
+  endwhile
+  print("\n");
+  z=1; 
+  temp=WBTS[z] + " " + WCEL[z] + " " + MEAS[z];
+  for(y=2; y<x; y++)
+    print("Z=%d WBTS-1 %s WCEL-1 %s MEAS-1 %s ",z,WBTS[z],WCEL[z],MEAS[z]); 
+    print("y=%d WBTS-2 %s WCEL-2  %s MEAS-2 %s\n",y,WBTS[y],WCEL[y],MEAS[y]); 
+    if(WBTS[y] == WBTS[z])
+      if(WCEL[y]== WCEL[z]) 
+        temp= temp + " " + MEAS[y]; z++;
+      else
+        fileprint(Resultado," %s \n",temp); z++;
+        temp=WBTS[z] + " " + WCEL[z] + " " + MEAS[z]; 
+      endif
+    else  
+     fileprint(Resultado," %s \n",temp); z++;
+     temp=WBTS[z] + " " + WCEL[z] + " " + MEAS[z];    
+    endif
+  
+  endfor  
+   
+      
+   
+ fileclose(Inventario_handle);
+
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

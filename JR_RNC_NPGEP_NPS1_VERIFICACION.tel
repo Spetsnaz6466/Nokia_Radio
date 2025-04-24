@@ -1,0 +1,179 @@
+#include <shellapi.hit>
+
+function main()
+  string filename,filename2,temp,line;
+  string RNC[],REGION[],RNC_NAME[],PCTime,NPGEP[],NPS1[];
+  string pit,pii,sen,iti,a;
+  integer handle,handle2,x,y,TOTAL;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  RNC[1]="COLR1"; REGION[1]="R5"; RNC_NAME[1]= "COLIMA";                //////##### RNC[1]=COLR1 es el nombre de la sesion telnet
+  RNC[2]="FUER1"; REGION[2]="R5"; RNC_NAME[2]= "FUENTES";               /////#### REGION[]= es solo para informar, no se usa   
+  RNC[3]="PROR1"; REGION[3]="R5"; RNC_NAME[3]= "PROVIDENCIA"; /*jec*/   /////#### RNC_NAME[]= Nombre del RNC analizado.
+  RNC[4]="MORR1"; REGION[4]="R5"; RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1"; REGION[5]="R5"; RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1"; REGION[6]="R5"; RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1"; REGION[7]="R5"; RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1"; REGION[8]="R7"; RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1"; REGION[9]="R7"; RNC_NAME[9]="FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7";  RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CANCUN"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R5"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]= "LA PAZ"; 
+  RNC[20]="PVRR2"; REGION[20]="R8"; RNC_NAME[20]="PUERTO VALLARTA 2"; 
+  RNC[21]="LERR2"; REGION[21]="R8"; RNC_NAME[21]="LERDO 2";
+  RNC[22]="OAXR2"; REGION[22]="R8"; RNC_NAME[22]= "OAXACA 2"; 
+  RNC[23]="VJZR2"; REGION[23]="R5"; RNC_NAME[23]="VILLA HERMOSA 2";
+  RNC[24]="CZAR2"; REGION[24]="R7"; RNC_NAME[24]= "COATZACOALCOS 2"; 
+  RNC[25]="HIDR2"; REGION[25]="R5"; RNC_NAME[25]="HIDALGO 2";
+  RNC[26]="XALR2"; REGION[26]="R7"; RNC_NAME[26]= "XALAPA 2"; 
+  RNC[27]="FTER2"; REGION[27]="R7"; RNC_NAME[27]= "FUERTES 2";
+  RNC[28]="BONR2"; REGION[28]="R7"; RNC_NAME[28]= "BONANPAK 2";
+  RNC[29]="CASR2"; REGION[29]="R7"; RNC_NAME[29]= "CASCADA 2";
+  RNC[30]="PLZR2"; REGION[30]="R7"; RNC_NAME[30]= "PLAZA 2";
+   
+  filename="VERIFICACION_NPGEP_Y_EN_NPS1_EN_RNCs"+ PCTime +".TXT";     /////#### Aqui se pone el nombre del archivo de salida
+  print("Creating file %s \n",filename);
+  filename2="CODIGOS_NPGEP_Y_EN_NPS1_EN_RNCs"+ PCTime +".TXT";     /////#### Aqui se pone el resultado
+  print("Creating file %s \n",filename2);
+  
+  
+  
+  handle = fileopen(filename,NEW);  
+  handle2=fileopen(filename2,NEW);      
+  fileclose(handle); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+   
+  for(x=1;x<31;x++)    ///////###### Si son 26 RNC's entonces el limite es 27, siempre 1 mas.
+   logclose(); device(RNC[x]);
+   temp= inttostr(x,DEC) + "/30  ACCESING TO " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];  //////#### Si desea cambien /26 a lo que necesite
+   pause(3,temp); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); LOG_SQUARE(RNC_NAME[x]);
+  
+  
+   tx("ZUSI:NPGEP;"); y=1;     /////#### Se busca la cantidad exacta de NPGEP's.
+   while(getline(line,"'NPGEP-'")) 
+     strscan(line,"%s",temp); NPGEP[y]=strreplace(temp,"NPGEP-",""); y++;
+   endwhile
+   print("%s tiene %d NPGEPs\n",RNC[x],y-1); TOTAL=y-1;    
+   for(y=1; y <=TOTAL; y++) 
+     send("ZDDS:NPGEP,%s;\r",NPGEP[y]); delay(60);
+     send("jane hwstatus -d\r");     
+     send("exit\n"); delay(60);
+   endfor
+   
+   
+   tx("ZUSI:NPS1;"); y=1; TOTAL=1;
+   while(getline(line,"'NPS1-'")) 
+     strscan(line,"%s",temp); 
+     NPS1[y]=strreplace(temp,"NPS1-",""); y++;
+   endwhile
+   print("%s tiene %d NPS1\n",RNC[x],y-1); 
+   TOTAL=y-1; 
+   for(y=1; y <=TOTAL; y++) 
+     send("ZDDS:NPS1,%s;\r",NPS1[y]); delay(60);
+     send("jane hwstatus -d\r"); delay(60);
+     send("exit\n"); delay(60);
+   endfor
+   y=1; TOTAL=1;
+
+   /* MISCELANEOS*/ 
+   
+   logclose();
+   
+   
+   a="ZWFL:P:1,1,17;"; 
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+   fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   a="ZWFL:P:1,1,18;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   a="ZWFL:P:1,2,17;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   
+   a="ZWFL:P:1,2,18;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   
+   a="ZWFL:P:1,3,15;";   
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   
+   a="ZWFL:P:1,4,15;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   a="ZWFL:P:1,3,17;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   a="ZWFL:P:1,4,17;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   a="ZWFL:P:2,1,15;";
+   tx(a);
+   if(getline(line,"'pit'")) 
+     strscan(line,"%s %s %s %s %s",pit,pit,pii,sen,iti);
+   else a=""; pit=""; pii=""; sen=""; iti="";
+   endif
+    fileprint(handle2,"%s %s %s %s %s %s\n",RNC[x],a,pit,pii,sen,iti);
+   
+   deviceclose(RNC[x]); 
+  endfor
+   winexec(strprint("NotePad %s",filename)); 
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction
+
+///////#### Seccion funciones
+
+void function LOG_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor logprint("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor 
+ logprint("\n");
+endfunction

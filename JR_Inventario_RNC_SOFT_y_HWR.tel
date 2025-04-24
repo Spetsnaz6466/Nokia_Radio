@@ -1,0 +1,116 @@
+#include <shellapi.hit>
+
+function main()
+  string filename,filename2,line;
+  string RNC[],RNC_NAME[],PCTime;
+  string ACT,flag="0",level,temp,temp2,RU,MP3,STEP;
+  integer handle,handle2,x;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  RNC[1]="COLR1";  RNC_NAME[1]= "COLIMA";                //////##### RNC[1]=COLR1 es el nombre de la sesion telnet
+  RNC[2]="FUER1";  RNC_NAME[2]= "FUENTES";                
+  RNC[3]="PROR1";  RNC_NAME[3]= "PROVIDENCIA";           /////#### RNC_NAME[]= Nombre del RNC analizado.
+  RNC[4]="MORR1";  RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1";  RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1";  RNC_NAME[6]= "PUERTO_VALLARTA";
+  RNC[7]="URUR1";  RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1";  RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1";  RNC_NAME[9]= "FUERTES"; 
+  RNC[10]="CZAR1"; RNC_NAME[10]= "COATZACOALCOS";
+  RNC[11]="OAXR1"; RNC_NAME[11]= "OAXACA"; 
+  RNC[12]="XALR1"; RNC_NAME[12]= "XALAPA";
+  RNC[13]="HIDR1"; RNC_NAME[13]= "HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; RNC_NAME[14]= "PLAZA";
+  RNC[15]="CASR1"; RNC_NAME[15]= "CANCUN"; 
+  RNC[16]="VJZR1"; RNC_NAME[16]= "VILLA_HERMOSA";
+  RNC[17]="BONR1"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; RNC_NAME[18]= "TLAQUEPAQUE";
+  RNC[19]="LPPR1"; RNC_NAME[19]= "LA_PAZ"; 
+  RNC[20]="PVRR2"; RNC_NAME[20]= "PUERTO_VALLARTA 2"; 
+  RNC[21]="LERR2"; RNC_NAME[21]= "LERDO_2";
+  RNC[22]="OAXR2"; RNC_NAME[22]= "OAXACA_2"; 
+  RNC[23]="VJZR2"; RNC_NAME[23]= "VILLA_HERMOSA_2";
+  RNC[24]="CZAR2"; RNC_NAME[24]= "COATZACOALCOS_2"; 
+  RNC[25]="HIDR2"; RNC_NAME[25]= "HIDALGO_2";
+  RNC[26]="XALR2"; RNC_NAME[26]= "XALAPA_2"; 
+  RNC[27]="FTER2"; RNC_NAME[27]= "FUERTES_2";
+  RNC[28]="BONR2"; RNC_NAME[28]= "BONANPAK_2";
+  RNC[29]="CASR2"; RNC_NAME[29]= "CASCADA_2";
+  RNC[30]="PLZR2"; RNC_NAME[30]= "PLAZA_2";         
+  RNC[31]="FUER2"; RNC_NAME[31]= "FUENTES_2";
+  RNC[32]="PROR2"; RNC_NAME[32]= "PROVIDENCIA_2";
+  RNC[33]="POZR1"; RNC_NAME[33]= "POZA_RICA";
+     
+  /* Logs guarda resultados de comando MML, si existe crea copia con extension V2 */
+  /* Para cambiar el nombre cambie: "JR_LOGS_MACRO_INVENTARIO_SOFT" por deseado */
+  filename="JR_LOGS_MACRO_INVENTARIO_SOFT_"+ PCTime +".TXT";     
+  if(fileaccess(filename)==1) 
+    filename="JR_LOGS_MACRO_INVENTARIO_SOFT_V2_"+ PCTime +".TXT"; endif
+  print("Creando archivo: %s \n",filename); handle = fileopen(filename,NEW); 
+  
+  /* Log guarda resumen de macro, si existe crea copia con extension V2 */
+  /* Para cambiar el nombre cambie: "JR_RESULTADOS_SOFT" por deseado */
+  filename2="JR_RESULTADOS_SOFT_"+ PCTime +".TXT"; 
+  if(fileaccess(filename2)==1)
+   filename2="JR_RESULTADOS_SOFT_V2_"+ PCTime +".TXT"; endif
+  print("Creando archivo: %s \n",filename2); handle2=fileopen(filename2,NEW);       
+  fileclose(handle); //logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+  
+  /* Comienza revision en la red, donde X define la variable de Inicio y fin, asi 
+  si X=1 significa que se comienza con el RNC 1 o COLR1 o Colima. En cambio si
+  deseo conversar de la Paz, X debera de ser igual a 19.
+  El valor de x<=30 significa que se ejecutara hasta que X=30 o RNC PLAZA 2 */ 
+  
+  for(x=1;x<=33;x++)    
+   logclose(); device(RNC[x]);
+   temp= inttostr(x,DEC) + "/30  ACCESING TO " + RNC[x] + "  " + RNC_NAME[x];  //## /30 es solo una etiqueta.
+   pause(3,temp); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); LOG_SQUARE(RNC_NAME[x]);
+   
+   // Seccion SOFT 
+   tx("ZWQO:CR;");  
+    temp=""; temp2=""; ACT=""; level=""; RU=""; MP3=""; flag="0"; 
+   while(getline(line))   
+     strscan(line,"%s %s",temp,temp2);
+     if(temp2=="BU") flag="1"; ACT=temp; endif
+     if(flag=="1")
+       strscan(line,"%s %s",level,temp2);  
+       if(temp2=="") 
+         strfetch(level,"2,5-7",RU,MP3);
+         if(RU=="4") RU="10";
+         elseif(RU=="5") RU="20";
+         elseif(RU=="6") RU="30";
+         else RU=="UNKONWN"; endif
+         flag="0"; break;
+       endif  
+     endif
+   endwhile
+   
+   // STEPS 
+   tx("ZUSI:DMCU;"); 
+   STEP="";
+   while(getline(line)) 
+     if(getline(line," 'DMCU-17' ")) STEP="1";
+     elseif(getline(line," 'DMCU-25' ")) STEP="2";
+     elseif(getline(line," 'DMCU-37' ")) STEP="3";
+     endif
+     
+   endwhile 
+   
+   deviceclose(RNC[x]); 
+   fileprint(handle2,"%d RNC: %s NOMBRE_BU_ACTIVO: %s RU: %s MP3: %s STEP %s \n",x,RNC[x],ACT,RU,MP3,STEP);
+ endfor
+  winexec(strprint("NotePad %s",filename)); 
+  winexec(strprint("NotePad %s",filename2)); 
+  pause(3,"FIN DE LA MACRO!!");
+
+endfunction
+
+///////#### Seccion funciones
+
+void function LOG_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor logprint("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor 
+ logprint("\n");
+endfunction

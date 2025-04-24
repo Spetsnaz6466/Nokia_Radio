@@ -1,0 +1,91 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string line,temp,temp2,ExcelFile,wbtsid="",wbtsname,wbtsalarmlvl,filename,wbtsalarm,IP_YES="NO";
+  string RNC[],REGION[],RNC_NAME[],ALM_CRI,ALM_MAY,ALM_MEN,PCTime,ALM_FECHA[],wbtsip,atras,HORA[],WBTS_ALM[];
+  string ExcelFile2;
+  integer ROW=4,handle,x,y,CONT,j=1,temp3,file_handle;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="Fecha para Alarmas Historicas: [AAAA-MM-DD] "; atras=PCTime; 
+    
+  /* Se abre 2 veces archivo excell */
+  ExcelFile = getworkdir() + "Reporte_de_NodosB_por_COCO_Plantilla.xls";
+  ExcelFile2 = getworkdir() + "Reporte_de_NodosB_por_COCO_" + PCTime + ".XLS";
+  
+  filecopy(ExcelFile,ExcelFile2);
+  ExcelFile=strreplace(ExcelFile2,"\\","\\\\" );  
+  print("excell file %s ",ExcelFile);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile); delay(5000);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile);
+  
+  //ask(IP_YES,"Desea Calcular los IP's de los NodosB??? [YES/NO]");
+ 
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="COLR1"; REGION[1]="R5"; RNC_NAME[1]= "COLIMA";
+  RNC[2]="FUER1"; REGION[2]="R5"; RNC_NAME[2]= "FUENTES";
+  RNC[3]="PROR1"; REGION[3]="R5"; RNC_NAME[3]= "PROVIDENCIA"; /*jec*/
+  RNC[4]="MORR1"; REGION[4]="R5"; RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1"; REGION[5]="R5"; RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1"; REGION[6]="R5"; RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1"; REGION[7]="R5"; RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1"; REGION[8]="R7"; RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1"; REGION[9]="R7"; RNC_NAME[9]="FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7";  RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CANCUN"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R7"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]= "LA PAZ"; 
+  RNC[20]="PVRR2"; REGION[20]="R5"; RNC_NAME[20]="PUERTO VALLARTA 2"; 
+  RNC[21]="LERR2"; REGION[21]="R7"; RNC_NAME[21]="LERDO 2";
+  RNC[22]="OAXR2"; REGION[22]="R7"; RNC_NAME[22]= "OAXACA 2"; 
+  RNC[23]="VJZR2"; REGION[23]="R8"; RNC_NAME[23]="VILLA HERMOSA 2";
+  RNC[24]="CZAR2"; REGION[24]="R7"; RNC_NAME[24]= "COATZACOALCOS 2"; 
+  RNC[25]="HIDR2"; REGION[25]="R7"; RNC_NAME[25]= "HIDALGO 2"; 
+  RNC[26]="FTER2"; REGION[26]="R7"; RNC_NAME[26]= "FUERTES 2";
+  RNC[27]="BONR2"; REGION[27]="R7"; RNC_NAME[27]= "BONANPAK 2";
+  RNC[28]="XALR2"; REGION[28]="R7"; RNC_NAME[28]= "XALAPA 2";
+  RNC[29]="CASR2"; REGION[29]="R7"; RNC_NAME[29]= "CASCADA 2";
+  RNC[30]="PLZR2"; REGION[30]="R7"; RNC_NAME[30]= "PLAZA 2";
+  RNC[31]="FUER2"; REGION[31]="R7"; RNC_NAME[31]= "FUENTES 2";
+  RNC[32]="PROR2"; REGION[32]="R7"; RNC_NAME[32]= "PROVIDENCIA 2";
+  RNC[33]="POZR1"; REGION[33]="R7"; RNC_NAME[33]= "POZA RICA";
+  
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=32;x<34;x++)
+   temp="Accesando a RNC " + RNC[x] + "_" + RNC_NAME[x];
+   pause(5,temp);
+   /*Acceso al Device de turno, llama funcion que inserta clave automaticamente*/
+   device(RNC[x]); 
+  
+   EXCELL_CELL_FILLOUT(handle,1,1,RNC[x]); //Lleno la hoja excell con el RNC a trabajar ese momento.
+  
+   /*Dentro del RNC se leen todos los COCOS's, obtenemos WBTS-ID's y llenamos la hoja Excel, 
+     una celda sin COCO es una celda que no funciona*/  
+   tx("ZRRI;"); CONT=1;
+   while(getline(line," 'A0'")) 
+     strfetch(line,"33-41",temp); strfetch(temp,"3-6",temp);
+     EXCELL_CELL_FILLOUT(handle,ROW,1,REGION[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,2,RNC[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,3,RNC_NAME[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,7,temp); ROW++; CONT++;
+   endwhile
+   /*Mensaje que comunica cuantos NodosB hay en el RNC*/
+   temp="RNC "+RNC[x]+ "_" + RNC_NAME[x] + " tiene " + inttostr(CONT-1,DEC) + " celdas";
+   pause(3,temp);
+   
+   
+     
+  deviceclose(RNC[x]); 
+  endfor
+  EXCELL_CELL_FILLOUT(handle,1,1,""); EXCELL_CELL_FILLOUT(handle,1,2,"");
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

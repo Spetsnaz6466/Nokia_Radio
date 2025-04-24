@@ -1,0 +1,69 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string temp,temp2,filename,RNC[],REGION[],RNC_NAME[],PCTime;
+  string line,FB,BU,UT[],NW;
+  integer file_handle,x,Resultado,y=1,z;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);  
+  temp="RNC_VFY_MML_" + PCTime + ".TXT";
+  Resultado=fileopen(temp,NEW);
+  fileclose(Resultado);
+  RNC[1]="COLR1";  REGION[1]="R5";  RNC_NAME[1]= "COLIMA";
+  RNC[2]="FUER1";  REGION[2]="R5";  RNC_NAME[2]= "FUENTES";
+  RNC[3]="PROR1";  REGION[3]="R5";  RNC_NAME[3]= "PROVIDENCIA"; /*jec*/
+  RNC[4]="MORR1";  REGION[4]="R5";  RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1";  REGION[5]="R5";  RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1";  REGION[6]="R5";  RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1";  REGION[7]="R5";  RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1";  REGION[8]="R7";  RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1";  REGION[9]="R7";  RNC_NAME[9]= "FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7"; RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CANCUN"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]="BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R5"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]="LA PAZ"; 
+  RNC[20]="PVRR2"; REGION[20]="R8"; RNC_NAME[20]="PUERTO VALLARTA 2"; 
+  RNC[21]="LERR2"; REGION[21]="R8"; RNC_NAME[21]="LERDO 2";
+  RNC[22]="OAXR2"; REGION[22]="R8"; RNC_NAME[22]= "OAXACA 2"; 
+  RNC[23]="VJZR2"; REGION[23]="R5"; RNC_NAME[23]="VILLA HERMOSA 2";
+  RNC[24]="CZAR2"; REGION[24]="R7"; RNC_NAME[24]= "COATZACOALCOS 2"; 
+  RNC[25]="HIDR1"; REGION[25]="R7"; RNC_NAME[25]="HIDALGO_ACAPULCO 2"; 
+  
+  for(x=1;x<26;x++)
+    temp2= inttostr(x,DEC) + "/25  ACCESANDO  A  " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];
+    pause(3,temp2); y=1;
+    filename= RNC[x] + "_Verificacion_" + PCTime +".TXT";
+    file_handle = fileopen(filename,NEW); fileclose(file_handle);
+    device(RNC[x]); tx("\n");
+    logenable(LOG_ENABLE_ALL); 
+    logset(filename,APPEND); 
+    temp=REGION[x] + "__" + RNC[x] + "__" + RNC_NAME[x];
+    LOG_SQUARE(temp); 
+    ////////////////////////////////////////////////////////
+    tx("ZWQO:CR;");
+    tx("ZUSI;");
+    tx("ZNET;");
+    tx("ZNGI:NA1;");
+    tx("ZNHI:NA1;");
+    tx("ZOYI::A;");
+    tx("ZAAP;");
+        
+    
+    ///////////////////////////////////////////////////////
+   
+    logclose();
+    deviceclose(RNC[x]); 
+    
+  endfor
+  winexec(strprint("NotePad %s",filename)); 
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

@@ -1,0 +1,169 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string line,temp,temp2,ExcelFile,wbtsid="",wbtsname,wbtsalarmlvl,filename,wbtsalarm,IP_YES="NO";
+  string RNC[],REGION[],RNC_NAME[],ALM_CRI,ALM_MAY,ALM_MEN,PCTime,ALM_FECHA[],wbtsip,atras,HORA[],WBTS_ALM[];
+  string ExcelFile2;
+  integer ROW=4,handle,x,y,CONT,j=1,temp3,file_handle;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="Fecha para Alarmas Historicas: [AAAA-MM-DD] "; atras=PCTime; 
+  //ask(atras,temp);
+  //print("Se buscaran alarmas historicas desde %s \n",atras);
+  /*Carga programa Excel, solicita archivo y abre, el TAB es predeterminado en este caso*/
+  //Filter = "xml files (*.*)|*.xls"; 
+  //ExcelFile = askfile(Filter); 
+  
+  /* Se abre 2 veces archivo excell */
+  ExcelFile = getworkdir() + "Reporte_de_Alarmas_Nodos_B_NSN_Plantilla.xls";
+  ExcelFile2 = getworkdir() + "Reporte_de_Alarmas_Nodos_B_NSN_" + PCTime + ".XLS";
+  
+  filecopy(ExcelFile,ExcelFile2);
+  ExcelFile=strreplace(ExcelFile2,"\\","\\\\" );  
+  print("excell file %s ",ExcelFile);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile); delay(5000);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile);
+  
+  //ask(IP_YES,"Desea Calcular los IP's de los NodosB??? [YES/NO]");
+ 
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="COLR1"; REGION[1]="R5"; RNC_NAME[1]= "COLIMA";
+  RNC[2]="FUER1"; REGION[2]="R5"; RNC_NAME[2]= "FUENTES";
+  RNC[3]="PROR1"; REGION[3]="R5"; RNC_NAME[3]= "PROVIDENCIA"; /*jec*/
+  RNC[4]="MORR1"; REGION[4]="R5"; RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1"; REGION[5]="R5"; RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1"; REGION[6]="R5"; RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1"; REGION[7]="R5"; RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1"; REGION[8]="R7"; RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1"; REGION[9]="R7"; RNC_NAME[9]="FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7";  RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CANCUN"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R7"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]= "LA PAZ"; 
+  
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=1;x<=19;x++)
+   temp="Accesando a RNC " + RNC[x] + "_" + RNC_NAME[x];
+   pause(5,temp);
+   /*Acceso al Device de turno, llama funcion que inserta clave automaticamente*/
+   device(RNC[x]); 
+  
+   EXCELL_CELL_FILLOUT(handle,1,1,RNC[x]); //Lleno la hoja excell con el RNC a trabajar ese momento.
+  
+   /*Dentro del RNC se leen todos los COCOS's, obtenemos WBTS-ID's y llenamos la hoja Excel, 
+     una celda sin COCO es una celda que no funciona*/  
+   tx("ZRRI;"); CONT=1;
+   while(getline(line," 'A0'")) 
+     strfetch(line,"33-41",temp); strfetch(temp,"3-6",temp);
+     EXCELL_CELL_FILLOUT(handle,ROW,1,REGION[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,2,RNC[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,3,RNC_NAME[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,7,temp); ROW++; CONT++;
+   endwhile
+   /*Mensaje que comunica cuantos NodosB hay en el RNC*/
+   temp="RNC "+RNC[x]+ "_" + RNC_NAME[x] + " tiene " + inttostr(CONT-1,DEC) + " celdas";
+   pause(3,temp);
+   y=ROW-CONT+1; 
+   /*Macro lee Excel, consulta WBTS, luego averigua si tiene alarmas, si tuviese crea log con alarmas*/
+   while(y<ROW)
+     EXCELL_CELL_FILLOUT(handle,1,2,inttostr(y,DEC));
+     EXCELL_CELL_FILLOUT(handle,y,11,"MACRO");
+     wbtsid=EXCELL_CELL_READ(handle,y,7);
+     print("NodoB %s\n",wbtsid);
+     filename=WBTS_ALM_LOGGING4 (PCTime,wbtsid,RNC[x],REGION[x]);  /*Se crea un log por nodoB*/
+      file_handle = fileopen(filename,READ);
+     if(filegetline(file_handle,line," 'U850'")) 
+       strscan(line,"%s",wbtsname); 
+       EXCELL_CELL_FILLOUT(handle,y,5,wbtsname); 
+     endif
+     if(filegetline(file_handle,line," 'NO ALARMS'"))  /*Sino hay alarmas no crea log file*/   
+       EXCELL_CELL_FILLOUT(handle,y,11,""); 
+       
+       /*Busqueda de alarmas historicas caso haya celda que tenga alarmas intermintentes*/
+       HIST_ALM_DIA(filename,wbtsid);
+       temp=HIST_ALM_SUM(filename);
+       ALM_CRI=""; ALM_MAY=""; ALM_MEN="";
+       temp=strreplace(temp,"_"," ");
+       strscan(temp,"%s %s %s",ALM_CRI,ALM_MAY,ALM_MEN);
+       ALM_CRI=strreplace(ALM_CRI,"C","");
+       ALM_MAY=strreplace(ALM_MAY,"M","");
+       ALM_MEN=strreplace(ALM_MEN,"P","");
+       EXCELL_CELL_FILLOUT(handle,y,13,ALM_CRI);
+       EXCELL_CELL_FILLOUT(handle,y,14,ALM_MAY);
+       EXCELL_CELL_FILLOUT(handle,y,15,ALM_MEN);       
+       /*Fin de busqueda*/     
+     else    
+      /*Si hay alarmas crea log file*/    
+      wbtsid=EXCELL_CELL_READ(handle,y,7);  /* Se lee el WBTS_ID del NodoB*/ 
+      if(IP_YES=="YES") wbtsip=IP_DEL_NODO(wbtsid); EXCELL_CELL_FILLOUT(handle,y,6,wbtsip); endif
+      /* Busca hora y fecha de las alarmas */
+      temp=ALARMA_ACTIVA_FECHA_HORA(filename);
+      temp=strreplace(temp,"_"," ");
+      strscan(temp,"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",temp2,ALM_FECHA[1],HORA[1],\
+      ALM_FECHA[2],HORA[2],ALM_FECHA[3],HORA[3],ALM_FECHA[4],HORA[4],ALM_FECHA[5],HORA[5],ALM_FECHA[6],HORA[6],\
+      ALM_FECHA[7],HORA[7],ALM_FECHA[8],HORA[8],ALM_FECHA[9],HORA[9],ALM_FECHA[10],HORA[10]); 
+      //print("cONTADORES %s",temp);
+      temp3=strtoint(temp2,DEC);
+      if(temp3>10) temp3=10;   endif  
+      EXCELL_CELL_FILLOUT(handle,y,9,ALM_FECHA[1]);   
+      EXCELL_CELL_FILLOUT(handle,y,10,HORA[1]); 
+      if(temp3>1)
+        temp3=temp3-1;
+        for(j=1;j<=temp3;j++)
+          EXCELL_CELL_FILLOUT(handle,y,(13+3*j),ALM_FECHA[j+1]);   
+          EXCELL_CELL_FILLOUT(handle,y,(14+3*j),HORA[j+1]); 
+        endfor   
+        temp3=temp3+1;
+      endif
+      
+      /* Contador de alarmas activas */
+      temp=ACTIVE_ALM_SUMARY(filename);  
+      EXCELL_CELL_FILLOUT(handle,y,8,temp); 
+      
+      /* Nivel de alarma de la primera alarma CRI_MAY_MEN */
+      wbtsalarmlvl=WBTS_ALM_LEVEL(filename);      
+      EXCELL_CELL_FILLOUT(handle,y,11,wbtsalarmlvl);   
+  
+      /* Codigo mas equivalente de la alarma */        
+      wbtsalarm=WBTS_ALM_CODE2(filename); 
+      wbtsalarm=strreplace(wbtsalarm,"_"," ");
+      strscan(wbtsalarm,"%s %s %s %s %s %s %s %s %s %s",WBTS_ALM[1],WBTS_ALM[2],WBTS_ALM[3],WBTS_ALM[4],WBTS_ALM[5],\
+      WBTS_ALM[6],WBTS_ALM[7],WBTS_ALM[8],WBTS_ALM[9],WBTS_ALM[10]);
+      wbtsalarm=WBTS_ALARMS(WBTS_ALM[1]);
+      EXCELL_CELL_FILLOUT(handle,y,12,wbtsalarm); 
+      if(temp3>1)
+        temp3=temp3-1;
+        for(j=1;j<=temp3;j++)
+          wbtsalarm=WBTS_ALARMS(WBTS_ALM[j+1]);
+          EXCELL_CELL_FILLOUT(handle,y,(15+3*j),wbtsalarm);        
+        endfor   
+      endif
+      
+      /* Se añade al Log del Nodo la cantidad de alarmas totales en el dia*/
+      HIST_ALM_DIA(filename,wbtsid);
+      temp=HIST_ALM_SUM(filename);
+      ALM_CRI=""; ALM_MAY=""; ALM_MEN=""; 
+      temp=strreplace(temp,"_"," "); strscan(temp,"%s %s %s",ALM_CRI,ALM_MAY,ALM_MEN);
+      ALM_CRI=strreplace(ALM_CRI,"C",""); 
+      ALM_MAY=strreplace(ALM_MAY,"M",""); 
+      ALM_MEN=strreplace(ALM_MEN,"P","");
+      EXCELL_CELL_FILLOUT(handle,y,13,ALM_CRI);
+      EXCELL_CELL_FILLOUT(handle,y,14,ALM_MAY);
+      EXCELL_CELL_FILLOUT(handle,y,15,ALM_MEN);      
+    endif 
+     y++;  /*Sigue la busqueda de alarmas hasta que ya acaben todos los WBTS-Id's*/ 
+   endwhile
+  deviceclose(RNC[x]); 
+  endfor
+  EXCELL_CELL_FILLOUT(handle,1,1,""); EXCELL_CELL_FILLOUT(handle,1,2,"");
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

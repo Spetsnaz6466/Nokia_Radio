@@ -1,0 +1,181 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+/* Sitios ATM o Dual */
+
+function main()
+ string wbtsid="",temp="",line="",atmif="",aaif="",wbtsip="",wbtsdgw="",wbtstrs="",ani="",wbtsnet,icsu;
+ string vpi_cat,vpi_cps,vpi_wo,vci32,vci50_WOST,wbtsname,IP_ROUTE,ROUTER="",WBTS_ETH="";
+ string vci33,vci34,vci35,vci50,vciUD[],vpi2,VLANIP[];
+ string filename,PCTime,wbtsalmcode,FLAGAH="",roustat,rncid,FECHAATRAS,VLAN[]; 
+ integer rou=0,handle,etnum,vc,vpi=0,x=1,y,NPGEP,m;
+
+ rncid=ACCESO_REMOTO(); 
+ ask(wbtsid,"INGRESE WBTS-ID (MAXIMO 4 DIGITOS): ");  
+ ani= ANI(wbtsid); 
+ rou=strtoint(ROUTE(ani),DEC); 
+ 
+ if(rou<>0)
+  ask(FECHAATRAS,"Fecha atras (yyyy-mm-dd)");
+  roustat=ROUTE_STAT(inttostr(rou,DEC));
+  temp=inttostr(rou,DEC); temp=FIND_ATMIF_VPI( temp);
+  temp=strreplace(temp,"_"," "); strscan(temp,"%s %s",atmif,vpi2);
+  vpi=strtoint(vpi2,DEC); 
+  aaif=AA_INTERFACE(atmif,inttostr(vpi,DEC));
+  wbtstrs=WBTS_TRS_IP(aaif);
+  wbtsip=WBTS_IP(wbtstrs);
+  wbtsdgw=WBTS_DGW_IP(wbtstrs);
+  wbtsnet=WBTS_NET_IP(wbtstrs);
+  print("WBTS %s\n",wbtsid); print("ROU=%d ATM-IF=%s VPI=%d aaif=%s\n",rou,atmif,vpi,aaif);
+  print("WBTS-IP = %s\n",wbtsip); print("WBTS-TRS= %s\n",wbtstrs); 
+  print("WBTS-DGW= %s\n",wbtsdgw); print("WBTS-NET= %s\n",wbtsnet);
+  temp=WBTS_VP(atmif,inttostr(vpi,DEC)); strscan(temp,"%s %s %s",vpi_cat,vpi_cps,vpi_wo);
+  print("VP: %s,%s,%s\n",vpi_cat,vpi_cps,vpi_wo);
+  etnum=strtoint(WBTS_ET( vpi_cps),DEC); 
+  vc=32; vci32=WBTS_VC(atmif,vpi,inttostr(vc,DEC)); vc=33; vci33=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+  vc=34; vci34=WBTS_VC(atmif,vpi,inttostr(vc,DEC)); vc=35; vci35=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+  vc=50; vci50=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0;
+  filename="RNC"+"_"+rncid +"_WBTS_" + wbtsid +"_"+ PCTime +".TXT"; 
+  handle = fileopen(filename,NEW); delay(400); 
+  print("Creando archivo LOG_WBTS : %s\n",filename);
+  fileprint(handle,"\n  RNC-ID= %s\n\n  WBTS-ID= %s \n\n",rncid,wbtsid);
+  FILE_SQUARE("DIRECCIONES IP DEL NODO",handle );   
+  fileprint(handle,"\n  WBTS-IP  = %s \n",wbtsip);
+  fileprint(handle,"  WBTS-TRS = %s\n",wbtstrs);
+  fileprint(handle,"  WBTS-DGW = %s \n\n",wbtsdgw);
+  FILE_SQUARE("CONFIGURACION Iub & DCN",handle );
+  fileprint(handle,"\n  Ruta: %d Estado: %s\n\n",rou,roustat);   
+  fileprint(handle,"  ATM_IF: %s VPI: %d IP-IF:%s\n\n",atmif,vpi,aaif);   
+  fileprint(handle,"  VPI-CAT:%s  CPS:%s VPI-STAT:%s \n",vpi_cat,vpi_cps,vpi_wo);
+  fileprint(handle,"  VCI32:%s \n",vci32);
+  fileprint(handle,"  VCI33:%s \n",vci33);
+  fileprint(handle,"  VCI34:%s \n",vci34);
+  fileprint(handle,"  VCI35:%s \n",vci35);
+  fileprint(handle,"  VCI50:%s \n\n",vci50);   
+  fileprint(handle,"  Total ET's: %d \n\n",etnum);     
+  fileclose(handle); 
+  logenable(LOG_ENABLE_ALL); 
+  logset(filename,APPEND); 
+  tx("ZLCI:%s,VC:%d;",atmif,vpi,vc);
+  while(getline(line,"'AAL2UD'")) 
+    strscan(line,"%s %s %s",vciUD[x],vciUD[x],vciUD[x]); x++;
+  endwhile
+  tx("ZRRI:ROU=%d;",rou);
+  tx("ZRII;");
+  tx("ZLSI;");
+  if(getline(line," '%s' ", ani)) 
+  strscan(line,"%s %s %s %s %s %s %s",icsu,icsu,icsu,icsu,icsu,icsu,icsu);
+  tx("ZAHP:ICSU,%s::%s;",icsu,FECHAATRAS);
+  endif
+  tx("ZLCJ:%s;",atmif);
+  tx("ZLJI:ROU=%d;",rou);
+  tx("ZQMI:::%s,%d;",atmif,vpi);
+  tx("ZQRI:OMU,:%s;\n\n",aaif);
+  tx("ZQKB:OMU::%s:LOG:ALL;",wbtstrs);
+  LOG_SQUARE("INFORMACION PUERTO ATM DEL NODOB" );
+  tx("\nZLAI:UNI:%s;",atmif);   
+  tx("ZYDI:%s;",atmif);  
+  LOG_SQUARE("GESTION O&M AL NODOB" );
+  tx("ZQRX::IP=%s:PING;\n",wbtstrs);  
+  tx("ZQRX::IP=%s:PING;\n",wbtsip);
+  if(getline(line,"'1 packets received'")) else PING_WBTS(wbtsip); endif
+  LOG_SQUARE("ALARMAS ACTIVAS" );
+  m=strlength(wbtsid); 
+  if(m==1) wbtsid = "000" + wbtsid; 
+  elseif(m==2) wbtsid = "00" + wbtsid; 
+  elseif(m==3) wbtsid = "0" + wbtsid; 
+  endif 
+  tx("\nZAAP:WBTS,%s;",wbtsid);  
+  if(getline(line,"'BFD down'"))
+    strscan(line,"%s %s %s ",temp,temp,WBTS_ETH); print("IPs ACTIVAS: WBTS-ETH %s\n",WBTS_ETH);
+  endif
+  LOG_SQUARE("ALARMAS HISTORICAS");
+  tx("\nZAHP:WBTS,%s::%s;",wbtsid,FECHAATRAS); 
+  while(getline(line,"'BFD 1 down'"))
+    strscan(line,"%s %s %s %s %s ",temp,temp,temp,temp,WBTS_ETH); 
+    print("IP's obtenidas de historico: WBTS-ETH %s \n",WBTS_ETH);
+  endwhile
+  if(getline(line,"'NO ALARM'")) FLAGAH=""; else FLAGAH="ALARM"; endif
+  LOG_SQUARE("INFORMACION AAL2UD" );
+  for(y=1;y<x;y++)
+    tx("\nZLJI:IF=%s,VPI=%d,VCI=%s;",atmif,vpi,vciUD[y]); 
+    if(getline(line," 'SE - SY' ")) strfetch(line,"3-9",vci50_WOST);  
+    else vci50_WOST="WO - EX";  
+    endif 
+  endfor
+  
+  LOG_SQUARE(" INFORMACION DUAL Iub " ); 
+  tx("ZQRL;");
+  logclose();
+  tx("ZQRB;");
+  if(getline(line,"'%s'",wbtsid))    
+    tx("ZUSI:NPGEP;");
+    if(getline(line,"'NPGEP-2'")) tx("ZQRB:NPGEP,2;"); 
+      if(getline(line,"'%s'",wbtsid)) tx("ZUSI:NPGEP,2;");
+        if(getline(line,"'WO-EX'",wbtsid)) NPGEP=2; else NPGEP=3; endif
+      endif
+    endif
+    tx("ZUSI:NPGEP;");
+    if(getline(line,"'NPGEP-4'")) tx("ZQRB:NPGEP,4;"); 
+      if(getline(line,"'%s'",wbtsid)) tx("ZUSI:NPGEP,4;");
+        if(getline(line,"'WO-EX'",wbtsid)) NPGEP=4; else NPGEP=5; endif
+      endif
+    endif
+    tx("ZQRB:NPGEP,%d;",NPGEP); x=1; y=1;
+    while(getline(line,"'VL'")) 
+      strscan(line,"%s %s %s ",VLAN[x],VLAN[x],VLANIP[x]); x++;
+    endwhile
+    for(y=1;y<x;y++)
+      tx("ZQRB:NPGEP,%d:%s;",NPGEP,VLAN[y]);
+      if(getline(line,"'%s'",wbtsid)) 
+        logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+        tx("ZQRB:NPGEP,%d:%s;",NPGEP,VLAN[y]); strfetch(line,"40-45,57-60",wbtsname,IP_ROUTE);
+        wbtsname=wbtsname+"U850";
+        tx("ZQKB:NPGEP,%d;",NPGEP);
+        if(getline(line,"'%s'",WBTS_ETH)) 
+          strscan(line,"%s %s %s",ROUTER,ROUTER,ROUTER); //print("RUTA:\n%s",line);
+        endif
+        print("NEMONICO %s \nNPGEP=%d IP_ROUTE %s ",wbtsname,NPGEP,IP_ROUTE);
+        print("WBTS-ETH_IP: %s ROUTER %s \n",WBTS_ETH,ROUTER);
+        tx("ZYGS:A:NPGEP,%d;",NPGEP);
+        if(getline(line,"'%s'",WBTS_ETH)) print("BFD LINK STATUS:%s",line); endif
+        tx("ZAAP:NPGEP,%d;",NPGEP);
+      //  tx("ZAHP:NPGEP,%d::%s;",NPGEP,FECHAATRAS);
+        tx("ZDDE:NPGEP,%d:\"jane prgtp -b\";",NPGEP);
+        tx("ZDDE:NPGEP,%d:\"jane hwstatus\";",NPGEP);
+        if(WBTS_ETH<>"")
+          tx("ZQRX:NPGEP,%d:IP=%s:PING:C=10,S=800;",NPGEP,ROUTER);
+          tx("ZQRX:NPGEP,%d:IP=%s:PING:C=100,S=800;",NPGEP,WBTS_ETH);
+        endif
+        break;
+      endif
+    endfor
+  else
+    LOG_SQUARE(" NO EXISTE DUAL IUB " );
+  endif
+  LOG_SQUARE(" INFORMACION DE SECTORES " ); 
+  logclose();
+  tx("ZDDS:ICSU;");
+  tx("ZLP:7,E2K\r"); send("7\r");  
+  tx("BD:%s,1;\r",wbtsid);
+  handle = fileopen(filename,APPEND); delay(400); 
+  while(getline(line," '-01' OR '-02' OR '-03' OR '-04' OR '-05' OR '-06' OR '-07' OR '-08' OR '%s'",wbtsid)) 
+    fileprint(handle,line);
+  endwhile
+  send("ZL:7;\r"); send("ZE\r");
+  
+  logenable(LOG_ENABLE_ALL); 
+  logset(filename,APPEND); 
+  tx("ZDDE::\"ZLE:8,RUOSTEQX;\",\"8SCD:%s;\",\"ZL:8\";",wbtsid);
+  if(getline(line,"'ICSU-'"))
+    strscan(line,"%s %s %s %s %s",icsu,icsu,icsu,icsu,icsu); 
+    icsu=strreplace(icsu,"ICSU-","");
+    
+  endif
+  fileclose(handle);
+  winexec(strprint("NotePad %s",filename)); 
+ else messagebox("EL NODOB NO EXISTE O NO TIENE DEFINIDO COCO",wbtsid); endif
+ 
+endfunction

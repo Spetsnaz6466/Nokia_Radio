@@ -1,0 +1,42 @@
+#include <shellapi.hit>
+
+function main()
+  string line,temp,PCTime;
+  string WBTS[],WCEL[],MEAS[];
+  integer Inventario_handle,Resultado,x=1,y,z,count=200;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="Inventatio_NodosB_" + PCTime + ".TXT";
+  Resultado=fileopen(temp,NEW);
+  fileprint(Resultado," WBTS WCEL M1006C25 M1006C26 M1006c27");
+  Inventario_handle = fileopen("telmex2.html",READ);
+    
+  while(fileread(Inventario_handle,line,count))
+    if(filegetline(Inventario_handle,line," 'WBTS-' "))
+      strscan(line,"%s %s %s",WBTS[x],WCEL[x],MEAS[x]); print("."); 
+    endif
+    x++;
+  endwhile
+  print("\n");
+  z=1; temp=WBTS[z] + " " + WCEL[z] + " " + MEAS[z];
+  
+  for(y=2; y<x; y++)
+    print("%d linea 1 %s linea 2 %s \n",y,WBTS[z],WBTS[y]); 
+    if(WBTS[y] == WBTS[z])
+      if(WCEL[y]== WCEL[z]) 
+        temp= temp + " " + MEAS[y]; z++;
+      endif
+   else  
+      print(" %s ",temp);
+      temp=WBTS[z] + " " + WCEL[z] + " " + MEAS[z];     
+    endif
+  
+  endfor  
+   
+      
+   
+ fileclose(Inventario_handle);
+
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

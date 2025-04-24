@@ -1,0 +1,53 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string pathid[],int[],vpi[],vci[],pathid2;
+  string RNC,PCTime,filename,line;
+  integer file_handle,x,y,file_handle2;
+  
+     integer count=100;
+
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);  
+  ask(RNC,"Ingrese nemonico del RNC ?? ");
+  device(RNC); 
+      
+  filename="NSN_UTRAN_COLLECT_IUCS_DATA_" + RNC + "_" + PCTime +".TXT";
+  file_handle = fileopen(filename,NEW); 
+  LOG_SQUARE(RNC); 
+  tx("ZLJI:ROU=1000;");
+  x=1; 
+  while(getline(line,"'1000' AND 'LOCAL'")) 
+   logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+   strscan(line,"%s %s %s %s %s ",pathid[x],pathid[x],int[x],vpi[x],vci[x]);
+   fileprint(file_handle,"1000 %s %s %s %s\n",pathid[x],int[x],vpi[x],vci[x]);
+   x++;
+   logclose();
+  endwhile
+  y=x-1;
+  
+  file_handle2=fileopen("filename.txt",READ);
+  
+  for(x=1;x<=y;x++)  
+   
+   if(fileread(file_handle2,line,count) )
+       strscan(line,"%s %s", pathid2,pathid2);
+       print("ZLSB:LOBO:%s;\n",pathid2);
+   endif
+   
+   fileclose(file_handle);
+
+
+  
+  
+  //print("ZLSB:LOBO:%s;\n",pathid[x]);
+   
+  endfor
+   
+      deviceclose(RNC);
+   
+  
+
+endfunction

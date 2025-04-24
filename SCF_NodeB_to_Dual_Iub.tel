@@ -1,0 +1,87 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string line,file,temp,PCTime;
+  string RNC_WBTS,State,WBTS_Nemonic;
+  string FSMX,FSMX_Serial,FSMX_Product_Code,FSMX_Core_Product_Code;
+  string FTIX,FTIX_Serial,FTIX_Product_Code;
+  string EXFSMX,EXFSMX_Serial,EXFSMX_Product_Code,EXFSMX_Core_Product_Code;
+  string FRCX1,FRCX1_Serial,FRCX1_Product_Code,FRCX1_Core_Product_Code;
+  string FRCX2,FRCX2_Serial,FRCX2_Product_Code,FRCX2_Core_Product_Code;
+  integer handle,Inventario_handle,Resultado,count=2000;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  temp="Inventatio_NodosB_" + PCTime + ".TXT";
+  Inventario_handle = fileopen("Listado_NodosB.TXT",READ);
+  Resultado=fileopen(temp,NEW);
+  fileprint(Resultado," LICENCE_CODE LICENCE_NAME LICENCE_FILE_NAME SERIAL_NUMBER \
+                        ORDER_IDENTIFIER CUSTOMER_ID CUSTOMER_NAME TARGET_NE_TYPE \
+                        TARGET_ID LICENCE_STATE START_DATE EXPIRATION_WARNING_PERIOD \
+                        LICENCE_CAPACITYFILE RNC WBTS ESTADO NEMONICO ");
+  fileprint(Resultado,"FSMX FSMX_Serial FSMX_Product_Code FSMX_Core_Product_Code "); 
+  fileprint(Resultado,"FTIX FTIX_Serial FTIX_Product_Code ");
+  fileprint(Resultado,"EXFSMX EXFSMX_Serial EXFSMX_Product_Code EXFSMX_Core_Product_Code "); 
+  fileprint(Resultado,"FRCX1 FRCX1_Serial FRCX1_Product_Code FRCX1_Core_Product_Code ");
+  fileprint(Resultado,"FRCX2 FRCX2_Serial FRCX2_Product_Code FRCX2_Core_Product_Code\n");
+  while(fileread(Inventario_handle,line,count))
+    strscan(line,"%s",file);
+    handle=fileopen(file,READ);
+    while(fileread(handle,line,count))
+      if(filegetline(handle,line," 'NEType=' AND 'WBTS' ")) 
+        strfetch(line," 'PLMN-PLMN':11-28, 'operationalState':19-25, 'locationName':15-24 ",RNC_WBTS,State,WBTS_Nemonic);
+        fileprint(Resultado,"%s ",file);
+        fileprint(Resultado,"%s %s %s ",RNC_WBTS,State,WBTS_Nemonic); 
+        if(filegetline(handle,line," 'Subrack' ")) 
+          strfetch(line," 'identificationCode':21-27",FSMX_Product_Code);
+        endif
+        if(filegetline(handle,line," 'CORE_FS' "))  
+          strfetch(line," 'identificationCode':21-27,'version':10-12 , 'serialNumber':15-25, 'CORE_FS':1-9 ",FSMX_Core_Product_Code,temp,FSMX_Serial,FSMX);
+          FSMX_Core_Product_Code=FSMX_Core_Product_Code + "." + temp;
+          fileprint(Resultado,"%s %s %s %s ",FSMX,FSMX_Serial,FSMX_Product_Code,FSMX_Core_Product_Code); 
+        endif
+        if(filegetline(handle,line," 'unitTypeActual' ")) 
+          strfetch(line," 'unitTypeActual':17-20, 'identificationCode':21-27,'version':10-12 , 'serialNumber':15-25",FTIX,FTIX_Product_Code,temp,FTIX_Serial);
+          FTIX_Product_Code = FTIX_Product_Code + "." + temp;
+          fileprint(Resultado,"%s %s %s ",FTIX,FTIX_Serial,FTIX_Product_Code); 
+        endif
+        if(filegetline(handle,line," 'Subrack' ")) 
+          strfetch(line," 'identificationCode':21-27",EXFSMX_Product_Code);
+        endif
+        if(filegetline(handle,line," 'CORE_FS' "))  
+          strfetch(line," 'identificationCode':21-27, 'version':10-12, 'serialNumber':15-25, 'CORE_FS':1-9 ",EXFSMX_Core_Product_Code,temp,EXFSMX_Serial,EXFSMX);
+          EXFSMX_Core_Product_Code = EXFSMX_Core_Product_Code + "." + temp;
+          fileprint(Resultado,"%s %s %s %s ",EXFSMX,EXFSMX_Serial,EXFSMX_Product_Code,EXFSMX_Core_Product_Code); 
+        else
+          fileprint(Resultado,"xxxxxxxxx xxxxxxxxx  xxxxxxxxx  xxxxxxxxx ");
+        endif
+        if(filegetline(handle,line," 'Subrack' ")) 
+          strfetch(line," 'identificationCode':21-27",FRCX1_Product_Code);
+        endif
+        if(filegetline(handle,line," 'CORE_FR' "))  
+          strfetch(line,"'identificationCode':21-27, 'version':10-12,  'serialNumber':15-25, 'CORE_FR':1-9 ",FRCX1_Core_Product_Code,temp,FRCX1_Serial,FRCX1);
+          FRCX1_Core_Product_Code = FRCX1_Core_Product_Code + "." + temp;
+          fileprint(Resultado,"%s %s %s %s ",FRCX1,FRCX1_Serial,FRCX1_Product_Code,FRCX1_Core_Product_Code); 
+        endif
+        if(filegetline(handle,line," 'Subrack' ")) 
+          strfetch(line," 'identificationCode':21-27",FRCX2_Product_Code);
+        endif 
+        if(filegetline(handle,line," 'CORE_FR' "))  
+          strfetch(line,"'identificationCode':21-27, 'version':10-12,  'serialNumber':15-25, 'CORE_FR':1-9 ",FRCX2_Core_Product_Code,temp,FRCX2_Serial,FRCX2);
+           FRCX2_Core_Product_Code = FRCX2_Core_Product_Code + "." + temp;
+          fileprint(Resultado,"%s %s %s %s \n",FRCX2,FRCX2_Serial,FRCX2_Product_Code,FRCX2_Core_Product_Code); 
+        else
+          fileprint(Resultado,"\n");
+        endif
+      else
+        break; 
+      endif
+   endwhile
+   fileclose(handle);
+   endwhile   
+ fileclose(Inventario_handle);
+
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

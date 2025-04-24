@@ -1,0 +1,43 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string filename,temp,temp2,temp3,line;
+  string RNC[],RNC_NAME[],PCTime;
+  integer handle,x,y,z;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="LERR1"; RNC_NAME[1]= "LERDO 1";
+  RNC[2]="LERR2"; RNC_NAME[2]= "LERDO 2";
+  RNC[3]="LPPR1"; RNC_NAME[3]= "LA PAZ 1"; /*jec*/
+  RNC[4]="OAXR1"; RNC_NAME[4]= "OAXACA 1"; 
+  RNC[5]="OAXR2"; RNC_NAME[5]= "OAXACA 2";
+  RNC[6]="XALR1"; RNC_NAME[6]= "XALAPA 1"; 
+  RNC[7]="XALR2"; RNC_NAME[7]= "XALAPA 2";
+  
+  
+  /*Acceso al Device de turno, llama funcion que inserta clave automaticamente*/
+  print("MEAS LERR1 LERR2 LPPR1 OAXR1 OAXR2\n");
+  filename="RESULTADO_MEDIDAS_RNC.TXT";
+  handle = fileopen(filename,NEW);
+  fileprint(handle,"MEAS LERR1 LERR2 LPPR1 OAXR1 OAXR2\n");
+  for(y=1; y<30; y++)
+    temp=RNC_MEAS(y); temp3=temp;
+    for(x=1; x<8; x++)
+      device(RNC[x]); 
+      tx("ZT2I:NAME=%s:OID=001:ICH=S;",temp);
+      if(getline(line,"'RESULT ACC.'"))
+        strscan(line,"%s %s %s %s",temp2,temp2,temp2,temp2); 
+        temp3=temp3 + " " + temp2;
+      endif
+      deviceclose(RNC[x]);
+    endfor
+    fileprint(handle,"%s\n",temp3);
+   endfor 
+  fileclose(handle); 
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

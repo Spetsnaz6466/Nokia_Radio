@@ -1,0 +1,87 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+/* Sitios Full IP */
+
+function main()
+  string wbtsid="",line="",NPGEP[],IPNB_IP,GTW,y;
+  string IPNB_ID,icsu="",wbtsip;
+  string filename,PCTime,rncid,FECHAATRAS; 
+  string region,pass,pass5="nemuuser",pass7="nemuuser",pass8="Tel1NBagR8";
+  integer handle,x;
+
+  rncid=ACCESO_REMOTO(); 
+  ask(region,"Ingrese Region [5/7/8]: "); 
+  
+  if(region=="5") pass=pass5;
+  elseif(region=="7") pass=pass7;
+  elseif(region=="8") pass=pass8;
+  endif
+  
+  ask(wbtsid,"Ingrese 6 primeros valores del Nemonico del NodoB sin U850: "); ask(FECHAATRAS,"Fecha atras (yyyy-mm-dd)");
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+  handle=0; filename="RNC"+"_"+rncid +"_WBTS_" + wbtsid +"_"+ PCTime +".TXT"; handle = fileopen(filename,NEW); 
+  print("Creando archivo LOG_WBTS : %s\n",filename); fileprint(handle,"\n  RNC-ID= %s\n\n  WBTS-ID= %s\n\n",rncid,wbtsid); logclose();
+
+  logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+  LOG_SQUARE(" VALIDANDO EL IUB " ); 
+  tx("ZQRL;");  while(getline(line,"'%s'",wbtsid)) strscan(line,"%s %s",IPNB_ID,IPNB_ID); if(IPNB_ID=="") print("NO EXISTE NODOB"); break; endif endwhile 
+  
+  x=1; tx("ZQRB:NPGEP::ID=%s;",IPNB_ID);
+  while(getline(line,"'%s'",wbtsid)) strscan(line,"%s",NPGEP[x]); strfetch(NPGEP[x],"7",NPGEP[x]); x++; endwhile
+  
+  tx("ZUSI:NPGEP,%s;",NPGEP[1]); if(getline(line,"'WO-EX'")) else NPGEP[1]=NPGEP[2]; endif
+  
+  tx("ZYGS:A:NPGEP,%s;",NPGEP[1]);
+  while(getline(line,"'%s'",IPNB_ID))
+    strscan(line,"%s %s %s %s %s %s %s %s %s",y,y,IPNB_IP,y,y,y,y,y,y);
+    
+    if(strtoint(IPNB_ID,DEC) == strtoint(y,DEC)) 
+       IPNB_IP=IPNB_IP; 
+    endif     
+  endwhile
+  
+  tx("ZQKB:NPGEP,%s;",NPGEP[1]); while(getline(line,"'%s'",IPNB_IP)) strscan(line,"%s %s %s",GTW,GTW,GTW); endwhile
+  
+  LOG_SQUARE(" PING RNC A GATEWAY " ); tx("ZQRX:NPGEP,%s:IP=%s:PING:C=100;",NPGEP[1],GTW);
+  
+  LOG_SQUARE(" PING RNC  A NODOB VLAN IP " ); tx("ZQRX:NPGEP,%s:IP=%s:PING:C=100;",NPGEP[1],IPNB_IP);
+  
+  strfetch(wbtsid,"3-",wbtsid);
+  
+  LOG_SQUARE(" ALARMAS ACTIVAS " ); tx("ZAAP:WBTS,%s;",wbtsid);
+  LOG_SQUARE(" ALARMAS HISTORICAS " ); tx("ZAHP:WBTS,%s::%s;",wbtsid,FECHAATRAS);
+  LOG_SQUARE(" ALARMAS ACTIVAS RNC " ); 
+    tx("ZAAP::NR=3240;"); 
+    tx("ZAHP::NR=3240:%s;",FECHAATRAS); 
+    tx("ZAHP:NPGEP,%s::%s;",NPGEP[1],FECHAATRAS); 
+  LOG_SQUARE(" INFORMACION DE SECTORES " ); 
+  
+  
+  tx("ZDDE::\"ZLE:8,RUOSTEQX;\",\"8SCD:%s;\",\"ZL:8\";",wbtsid);
+  if(getline(line,"'Flexi'")) 
+   strscan(line,"%s %s %s %s %s",wbtsip,wbtsip,wbtsip,wbtsip,wbtsip);
+  endif  
+  if(getline(line,"'ICSU-'"))
+    strscan(line,"%s %s %s %s %s",icsu,icsu,icsu,icsu,icsu); 
+    icsu=strreplace(icsu,"ICSU-","");
+    //print("icsu %s",icsu);
+  endif
+  logclose();
+  
+  tx("ZDDS:ICSU,%s;",icsu); tx("ZLP:7,E2K;\r"); send("7\r"); tx("BD:%s,1;\r",wbtsid); 
+  handle = fileopen(filename,APPEND);  
+  while(getline(line," '-01' OR '-02' OR '-03' OR '-04' OR '-05' OR '-06' OR '-07' OR '-08' OR '%s'",wbtsid)) 
+    fileprint(handle,line);
+  endwhile
+  send("ZL:7;\r"); send("ZE\r"); 
+  logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+  tx("ZDDE:ICSU,%s:\"ZLP:1,E2K;\",\"1MD:%s,1;\";",icsu,wbtsid); 
+  fileclose(handle);  
+  winexec(strprint("NotePad %s",filename)); 
+
+  winexec(strprint("c:\\Program Files (x86)\\Nokia Siemens Networks\\Managers\\BTS Site\\BTS Site Manager70\\BTSSiteManager.bat -ne %s -pw Nemuadmin:%s",wbtsip,pass)); 
+     
+ 
+endfunction

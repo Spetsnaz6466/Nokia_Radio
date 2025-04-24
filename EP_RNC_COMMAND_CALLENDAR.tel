@@ -1,0 +1,77 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string filename,temp,temp1="",temp2,line;
+  string RNC[],REGION[],RNC_NAME[],PCTime;
+  integer handle,x;
+   
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  RNC[1]="COLR1"; REGION[1]="R5"; RNC_NAME[1]= "COLIMA";
+  RNC[2]="FUER1"; REGION[2]="R5"; RNC_NAME[2]= "FUENTES";
+  RNC[3]="PROR1"; REGION[3]="R5"; RNC_NAME[3]= "PROVIDENCIA"; /*jec*/
+  RNC[4]="MORR1"; REGION[4]="R5"; RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1"; REGION[5]="R5"; RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1"; REGION[6]="R5"; RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1"; REGION[7]="R5"; RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1"; REGION[8]="R7"; RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1"; REGION[9]="R7"; RNC_NAME[9]="FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7";  RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CASCADA"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R5"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]= "LA PAZ";  
+  RNC[20]="PVRR2"; REGION[20]="R8"; RNC_NAME[20]="PUERTO VALLARTA 2"; 
+  RNC[21]="LERR2"; REGION[21]="R8"; RNC_NAME[21]="LERDO 2";
+  RNC[22]="OAXR2"; REGION[22]="R8"; RNC_NAME[22]= "OAXACA 2"; 
+  RNC[23]="VJZR2"; REGION[23]="R5"; RNC_NAME[23]="VILLA HERMOSA 2";
+  RNC[24]="CZAR2"; REGION[24]="R7"; RNC_NAME[24]= "COATZACOALCOS 2"; 
+  RNC[25]="HIDR2"; REGION[25]="R7"; RNC_NAME[25]= "HIDALGO 2";
+  RNC[26]="FTER2"; REGION[26]="R7"; RNC_NAME[26]= "FUERTES 2";
+  RNC[27]="BONR2"; REGION[27]="R7"; RNC_NAME[27]= "BONANPAK 2";
+  RNC[28]="XALR2"; REGION[28]="R7"; RNC_NAME[28]= "XALAPA 2";
+  RNC[29]="CASR2"; REGION[29]="R7"; RNC_NAME[29]= "CASCADA 2";
+  RNC[30]="PLZR2"; REGION[30]="R7"; RNC_NAME[30]= "PLAZA 2";
+  RNC[31]="FUER2"; REGION[31]="R7"; RNC_NAME[31]= "FUENTES 2";
+  RNC[32]="PROR2"; REGION[32]="R7"; RNC_NAME[32]= "PROVIDENCIA 2";
+  RNC[33]="POZR1"; REGION[33]="R7"; RNC_NAME[33]= "POZA RICA"; 
+  RNC[34]="MORR2"; REGION[34]="R7"; RNC_NAME[34]= "MORELIA_2"; 
+  RNC[35]="PROR3"; REGION[35]="R7"; RNC_NAME[35]= "PROVIDENCIA_3";
+  RNC[36]="CHLR1"; REGION[36]="R7"; RNC_NAME[36]= "CHILPANCINGO_1";
+   
+  filename="REPORTE_CC_TELCEL_MEXICO_"+ PCTime +".TXT"; print("Creating file %s \n",filename);
+  
+  handle = fileopen(filename,NEW); fileclose(handle);
+  logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+   
+  for(x=1;x<=36;x++)      /// Aumentar para incliur a mas RNC's
+   logclose(); device(RNC[x]); 
+   temp= inttostr(x,DEC) + "/36  ACCESING TO " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];  /// Aumentar 24 a mas RNC's
+   pause(3,temp); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); LOG_SQUARE(RNC_NAME[x]);
+         
+   LOG_SQUARE("CONFIGURACION DE COMMAND CALLENDAR"); 
+   tx("ZICL;"); 
+   if(getline(line," 'EMPTY'")) temp1="COMMAND_CALLENDAR_ESTA_VACIO!!!"; 
+   else 
+    temp1="EXISTE_COMMAND_CALLENDAR";
+   endif
+   tx("ZICL:CFILE=MONSAFE:COM;");   
+   tx("ZICL:CFILE=TUESAFE:COM;");   
+   tx("ZICL:CFILE=WEDSAFE:COM;");   
+   tx("ZICL:CFILE=THUSAFE:COM;");   
+   tx("ZICL:CFILE=FRISAFE:COM;");   
+   tx("ZICL:CFILE=SATSAFE:COM;");   
+   tx("ZICL:CFILE=SUNSAFE:COM;");  
+   print("RNC_NEMONICO: %s COMMAND_CALLENDAR_STATUS: %s\n",RNC[x],temp1);
+      
+   deviceclose(RNC[x]); 
+  endfor
+  winexec(strprint("NotePad %s",filename)); 
+  
+endfunction

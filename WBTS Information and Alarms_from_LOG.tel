@@ -1,0 +1,96 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+ string wbtsid="",temp="",line="",atmif="",aaif="",wbtsip="",wbtsdgw="",wbtstrs="",ani="",wbtsnet;
+ string vpi_cat,vpi_cps,vpi_wo,vci32,vci50_WOST,vci33,vci34,vci35,vci50,vpi2,wbtsname;
+ string filename,PCTime,FLAGAH="",roustat,rncid="VJZR1",FECHAATRAS; 
+ integer rou=0,file_handle,handle,etnum,vc,vpi=0,count=1000;
+
+ device(rncid); 
+ tx("\r");
+ 
+ file_handle = fileopen("VJZR1_Lista_NodosB_Operando.txt",READ);
+ while(fileread(file_handle,line,count))
+   strscan(line,"%s %s",wbtsid,wbtsname);
+   ani= ANI(wbtsid); 
+   rou=strtoint(ROUTE(ani),DEC); 
+   if(rou<>0)
+     FECHAATRAS="2011-1-27";
+     roustat=ROUTE_STAT(inttostr(rou,DEC));
+     temp=inttostr(rou,DEC); temp=FIND_ATMIF_VPI( temp);
+     temp=strreplace(temp,"_"," "); strscan(temp,"%s %s",atmif,vpi2);
+     vpi=strtoint(vpi2,DEC); 
+     aaif=AA_INTERFACE(atmif,inttostr(vpi,DEC));
+     wbtstrs=WBTS_TRS_IP(aaif);
+     wbtsip=WBTS_IP(wbtstrs);
+     wbtsdgw=WBTS_DGW_IP(wbtstrs);
+     wbtsnet=WBTS_NET_IP(wbtstrs);
+     print("WBTS %s\n",wbtsid); print("ROU=%d ATM-IF=%s VPI=%d aaif=%s\n",rou,atmif,vpi,aaif);
+     print("WBTS-IP = %s\n",wbtsip); print("WBTS-TRS= %s\n",wbtstrs); 
+     print("WBTS-DGW= %s\n",wbtsdgw); print("WBTS-NET= %s\n",wbtsnet);
+     temp=WBTS_VP(atmif,inttostr(vpi,DEC)); strscan(temp,"%s %s %s",vpi_cat,vpi_cps,vpi_wo);
+     print("VP: %s,%s,%s\n",vpi_cat,vpi_cps,vpi_wo);
+     etnum=strtoint(WBTS_ET( vpi_cps),DEC); 
+     vc=32; vci32=WBTS_VC(atmif,vpi,inttostr(vc,DEC)); vc=33; vci33=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+     vc=34; vci34=WBTS_VC(atmif,vpi,inttostr(vc,DEC)); vc=35; vci35=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+     vc=50; vci50=WBTS_VC(atmif,vpi,inttostr(vc,DEC));
+     PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); handle=0;
+     filename="VJZR1"+"_"+"_WBTS_" + wbtsid +"_"+ PCTime +".TXT"; 
+     handle = fileopen(filename,NEW); delay(400); 
+     print("Creando archivo LOG_WBTS : %s\n",filename);
+     fileprint(handle,"\n  RNC-ID= %s\n\n  WBTS-ID= %s \n\n",rncid,wbtsid);
+     FILE_SQUARE("DIRECCIONES IP DEL NODO",handle );   
+     fileprint(handle,"\n  WBTS-IP  = %s \n",wbtsip);
+     fileprint(handle,"  WBTS-TRS = %s\n",wbtstrs);
+     fileprint(handle,"  WBTS-DGW = %s \n\n",wbtsdgw);
+     FILE_SQUARE("CONFIGURACION Iub & DCN",handle );
+     fileprint(handle,"\n  Ruta: %d Estado: %s\n\n",rou,roustat);   
+     fileprint(handle,"  ATM_IF: %s VPI: %d IP-IF:%s\n\n",atmif,vpi,aaif);   
+     fileprint(handle,"  VPI-CAT:%s  CPS:%s VPI-STAT:%s \n",vpi_cat,vpi_cps,vpi_wo);
+     fileprint(handle,"  VCI32:%s \n",vci32);
+     fileprint(handle,"  VCI33:%s \n",vci33);
+     fileprint(handle,"  VCI34:%s \n",vci34);
+     fileprint(handle,"  VCI35:%s \n",vci35);
+     fileprint(handle,"  VCI50:%s \n\n",vci50);   
+     fileprint(handle,"  Total ET's: %d \n\n",etnum);     
+     fileclose(handle); 
+     logenable(LOG_ENABLE_ALL); 
+     logset(filename,APPEND); 
+     tx("ZLCI:%s,VC:%d,32;",atmif,vpi,vc);
+     tx("ZLCI:%s,VC:%d,33;",atmif,vpi,vc);
+     tx("ZLCI:%s,VC:%d,34;",atmif,vpi,vc);  
+     tx("ZLCI:%s,VC:%d,35;",atmif,vpi,vc);
+     tx("ZLCI:%s,VC:%d,50;",atmif,vpi,vc);
+     tx("ZRRI:ROU=%d;",rou);
+     tx("ZQMI:::%s,%d;",atmif,vpi);
+     tx("ZQRI:OMU,:%s;\n\n",aaif);
+     tx("ZQKB:OMU::%s:LOG:ALL;",wbtstrs);
+     LOG_SQUARE("INFORMACION PUERTO ATM DEL NODOB" );
+     tx("\nZLAI:UNI:%s;",atmif);   
+     tx("ZYDI:%s;",atmif);  
+     LOG_SQUARE("GESTION AL NODOB" );
+     tx("ZQRX::IP=%s:PING;\n",wbtstrs);  
+     tx("ZQRX::IP=%s:PING;\n",wbtsip);
+     if(getline(line,"'1 packets received'")) else PING_WBTS(wbtsip); endif
+     LOG_SQUARE("ALARMAS ACTIVAS" );
+     tx("\nZAAP:WBTS,%s;",wbtsid); 
+     LOG_SQUARE("ALARMAS HISTORICAS");
+     tx("\nZAHP:WBTS,%s::%s;",wbtsid,FECHAATRAS); 
+     if(getline(line,"'NO ALARM'")) FLAGAH=""; else FLAGAH="ALARM"; endif
+     LOG_SQUARE("INFORMACION AAL2UD" );
+     tx("\nZLJI:IF=%s,VPI=%d,VCI=50;",atmif,vpi); 
+     if(getline(line," 'SE - SY' ")) 
+       strfetch(line,"3-9",vci50_WOST); print(vci50_WOST); 
+     else vci50_WOST="WO - EX";  
+     print(vci50_WOST); 
+     endif 
+     logclose(); 
+     winexec(strprint("NotePad %s",filename)); 
+     print("dd %",FLAGAH);
+     else messagebox("NO HAY DATOS PARA ESTE COCO",wbtsid); endif
+endwhile     
+
+ 
+endfunction

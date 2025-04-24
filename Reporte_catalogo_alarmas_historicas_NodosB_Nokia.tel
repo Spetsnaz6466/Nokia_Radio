@@ -1,0 +1,93 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string temp,filename,line,fecha;
+  string RNC[],REGION[],RNC_NAME[],PCTime,CATALOGO[];
+  integer file_handle,x,a,b=1;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="BANR1"; REGION[1]="5"; RNC_NAME[1]="Bandera_I";
+  RNC[2]="BANR2"; REGION[2]="5"; RNC_NAME[2]="Bandera_II";
+  RNC[3]="PROR1"; REGION[3]="5"; RNC_NAME[3]="Providencia_I";
+  RNC[4]="PROR2"; REGION[4]="5"; RNC_NAME[4]="Providencia_II";
+  RNC[5]="PROR3"; REGION[5]="5"; RNC_NAME[5]="Providencia_III";
+  RNC[6]="PVRR1"; REGION[6]="5"; RNC_NAME[6]="Puerto_Vallarta_I";
+  RNC[7]="PVRR2"; REGION[7]="5"; RNC_NAME[7]="Puerto_Vallarta_II";
+  RNC[8]="COLR1"; REGION[8]="5"; RNC_NAME[8]="Colima";
+  RNC[9]="MORR1"; REGION[9]="5"; RNC_NAME[9]="Morelia";
+  RNC[10]="MORR2"; REGION[10]="5"; RNC_NAME[10]="Morelia_II";
+  RNC[11]="URUR1"; REGION[11]="5"; RNC_NAME[11]="Uruapan";
+  RNC[12]="FUER1"; REGION[12]="5"; RNC_NAME[12]="Fuentes_I";
+  RNC[13]="FUER2"; REGION[13]="5"; RNC_NAME[13]="Fuentes_II";
+  RNC[14]="TLAR1"; REGION[14]="5"; RNC_NAME[14]="Tlaquepaque ";
+  RNC[15]="FTER1"; REGION[15]="7"; RNC_NAME[15]="Fuertes_I";
+  RNC[16]="FTER2"; REGION[16]="7"; RNC_NAME[16]="Fuertes_II";
+  RNC[17]="FTER3"; REGION[17]="7"; RNC_NAME[17]="Fuertes_III";
+  RNC[18]="FTER4"; REGION[18]="7"; RNC_NAME[18]="Fuertes_IV";
+  RNC[19]="FTER5"; REGION[19]="7"; RNC_NAME[19]="Fuertes_V";
+  RNC[20]="LERR1"; REGION[20]="7"; RNC_NAME[20]="Veracruz_Lerdo_I";
+  RNC[21]="LERR2"; REGION[21]="7"; RNC_NAME[21]="Veracruz_Lerdo_II";
+  RNC[22]="LERR3"; REGION[22]="7"; RNC_NAME[22]="Veracruz_Lerdo_III";
+  RNC[23]="LERR4"; REGION[23]="7"; RNC_NAME[23]="Verarcruz_Lerdo_IV";
+  RNC[24]="XALR1"; REGION[24]="7"; RNC_NAME[24]="Xalapa_I";
+  RNC[25]="XALR2"; REGION[25]="7"; RNC_NAME[25]="Xalapa_II";
+  RNC[26]="POZR1"; REGION[26]="7"; RNC_NAME[26]="Poza_Rica";
+  RNC[27]="HIDR1"; REGION[27]="7"; RNC_NAME[27]="Hidalgo_I_Acapulco";
+  RNC[28]="HIDR2"; REGION[28]="7"; RNC_NAME[28]="Hidalgo_II_Aapulco";
+  RNC[29]="OAXR1"; REGION[29]="7"; RNC_NAME[29]="Oaxaca_I";
+  RNC[30]="OAXR2"; REGION[30]="7"; RNC_NAME[30]="Oaxaca_II";
+  RNC[31]="OAXR3"; REGION[31]="7"; RNC_NAME[31]="Oaxaca_III";
+  RNC[32]="CHLR1"; REGION[32]="7"; RNC_NAME[32]="Chilpancingo";
+  RNC[33]="CZAR1"; REGION[33]="7"; RNC_NAME[33]="Coatzacoalcos_I";
+  RNC[34]="CZAR2"; REGION[34]="7"; RNC_NAME[34]="Coatzacoalcos_II";
+  RNC[35]="LPPR1"; REGION[35]="7"; RNC_NAME[35]="Puebla_La_Paz";
+  RNC[36]="PLZR1"; REGION[36]="8"; RNC_NAME[36]="Mérida_Plaza";
+  RNC[37]="PLZR2"; REGION[37]="8"; RNC_NAME[37]="Mérida_Plaza_II";
+  RNC[38]="PLZR3"; REGION[38]="8"; RNC_NAME[38]="Mérida_Plaza_III";
+  RNC[39]="PLZR4"; REGION[39]="8"; RNC_NAME[39]="Mérida_Plaza_IV";
+  RNC[40]="CASR1"; REGION[40]="8"; RNC_NAME[40]="Cancún_I";
+  RNC[41]="CASR2"; REGION[41]="8"; RNC_NAME[41]="Cancún_II";
+  RNC[42]="CASR3"; REGION[42]="8"; RNC_NAME[42]="Cancún_III";
+  RNC[43]="CASR4"; REGION[43]="8"; RNC_NAME[43]="Cancún_IV";
+  RNC[44]="BONR1"; REGION[44]="8"; RNC_NAME[44]="Bonampak_I";
+  RNC[45]="BONR2"; REGION[45]="8"; RNC_NAME[45]="Bonampak_II";
+  RNC[46]="BONR3"; REGION[46]="8"; RNC_NAME[46]="Bonampak_III";
+  RNC[47]="BONR4"; REGION[47]="8"; RNC_NAME[47]="Bonampak_IV";
+  RNC[48]="VJZR1"; REGION[48]="8"; RNC_NAME[48]="Villa_Hermosa_I";
+  RNC[49]="VJZR2"; REGION[49]="8"; RNC_NAME[49]="Villa_Hermosa_II";
+  RNC[50]="VJZR3"; REGION[50]="8"; RNC_NAME[50]="Villa_Hermosa_III";
+  RNC[51]="VJZR4"; REGION[51]="8"; RNC_NAME[51]="Villa_Hermosa_IV";
+  
+  //CATALOGO[1]="7650"; 
+  //CATALOGO[1]="7651"; 
+  CATALOGO[1]="7665"; 
+  //CATALOGO[4]="7653"; 
+  //CATALOGO[5]="7750";
+     
+  filename="NSN_CATALOGO_ALARMAS_HISTORICAS_WBTS_7665_" + PCTime +".TXT";
+  file_handle = fileopen(filename,NEW); 
+  fileclose(file_handle);
+  ask(fecha,"Ingrese fecha");
+  /*Aqui comienza el programa buscando hasta 24 RNC, notese que x<25, x define la cantidad de RNC's*/ 
+  for(x=15;x<=51;x++)
+   temp= inttostr(x,DEC) + "/48  ACCESANDO  A  " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];
+   pause(3,temp);
+   device(RNC[x]); 
+   temp=REGION[x] + "__" + RNC[x] + "__" + RNC_NAME[x];
+   logenable(LOG_ENABLE_ALL); 
+   logset(filename,APPEND); 
+   LOG_SQUARE(temp);   
+   for(a=1;a<=b;a++)
+    temp="ZAHP::NR=" + CATALOGO[a] + ":"+ fecha+";";
+    tx(temp); 
+   endfor
+   logclose();
+   deviceclose(RNC[x]);
+  endfor    
+  winexec(strprint("NotePad %s",filename)); 
+
+
+endfunction

@@ -1,0 +1,44 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string temp,filename,line,wbtsname,alarma,fechainicio,horainicio,fechatermino,horatermino;
+  string RNC[],REGION[],RNC_NAME[],PCTime,Filter,ExcelFile;
+  integer handle,file_handle,x,y=4;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  
+  RNC[1]="BANR1"; 
+  RNC[2]="BANR2"; 
+  RNC[3]="MORR1"; 
+  RNC[4]="MORR2"; 
+  RNC[5]="URUR1"; 
+  RNC[6]="FUER2"; 
+  RNC[7]="TLAR1"; 
+   
+  filename="LR_NSN_ZNET_ZLCI_" + PCTime +".TXT";
+ 
+  file_handle = fileopen(filename,NEW); 
+  fileclose(file_handle);
+ 
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=1;x<=7;x++)                       /////####### PARA PONER MAS RNC's cambiar 39 a valor deseado########
+   temp= inttostr(x,DEC) + "/7  ACCESANDO  A  " + RNC[x] ;
+   pause(1,temp); 
+   temp= RNC[x];
+   logenable(LOG_ENABLE_ALL); 
+   logset(filename,APPEND); 
+   device(RNC[x]); 
+   tx("ZLCI:1,VC:1,:;");
+   tx("ZLCI:9,VC:1,:;");
+   tx("ZNET;");
+   logclose();    
+   deviceclose(RNC[x]);
+  endfor    
+  winexec(strprint("NotePad %s",filename)); 
+  messagebox("FIN DE LA MACRO!!");
+
+
+endfunction

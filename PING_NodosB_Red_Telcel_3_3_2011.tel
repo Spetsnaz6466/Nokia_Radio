@@ -1,0 +1,33 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string Filter,line,ExcelFile;
+  string RNC,wbtsip,resultado;
+  integer ROW=3,handle,CONT;
+  
+  Filter = "xml files (*.*)|*.xls"; 
+  ExcelFile = askfile(Filter);  
+  ExcelFile=strreplace(ExcelFile,"\\","\\\\" );  
+  print("excell file %s ",ExcelFile);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile);   
+  
+  RNC=EXCELL_CELL_READ(handle,ROW,1);
+  while(RNC<>"") 
+    RNC=EXCELL_CELL_READ(handle,ROW,1); print("RNC %s",RNC);
+    wbtsip=EXCELL_CELL_READ(handle,ROW,5); print(" PING IP %s\n",wbtsip);
+    device(RNC);
+    tx("ZQRX::IP=%s;",wbtsip); 
+    if(getline(line,"'0 packets received'")) 
+      resultado="FALLA";
+    else
+      resultado="OK";
+    endif
+    EXCELL_CELL_FILLOUT(handle,ROW,9,resultado);   
+    ROW++; 
+   endwhile
+  
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

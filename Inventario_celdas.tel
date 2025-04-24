@@ -1,0 +1,66 @@
+function main() 
+  string line,filename,filename2,Tel;
+  string A,B,PCTime,RED;
+  string BTS[],BTS_NUMBER[],BSC[],BSC_NUMBER[],LA[],LAC[],MCC[],MNC[],CI[],BTS_ADMIN[],RZ[],CA[],CLN[],SA[],SA_NUMBER[];
+  integer handle,handle2,x=0,y;    
+
+  messagebox("ESTA MACRO REALIZA UN INVENTARIO DE CELDAS, RESULTADOS VAN A MESSAGE WINDOW Y A FILE.......");  clr();
+  Tel="LIMMSS09"; ask(Tel,"INGRESE MSS ? "); Tel=strupper(Tel); device(Tel);  tx("ZDCD;"); 
+  if(getline(line,"'TIME  '")) 
+    strscan(line,"%s %s %s",A,A,B); B=strreplace(B,":","-"); PCTime = A + "__" + B; filename= Tel + "_LOG_INVENTARIO_" + PCTime + ".TXT" ;
+    handle = fileopen(filename,NEW); fileclose(handle); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); filename2= Tel + "_INVENTARIO_CELDAS_" + PCTime + ".TXT" ; handle2 = fileopen(filename2,NEW); 
+  endif  
+  ask(RED,"FOR 2G TYPE: 2G AND FOR 3G TYPE: 3G"); RED=strupper(RED);
+    
+  if(RED=="2G") 
+    tx("ZEPO:TYPE=BTS;"); 
+    while(getline(line))
+      if(getline(line," 'BTS   NAME :' AND 'NUMBER  :' ")) x++; line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",BTS[x],BTS[x],BTS[x],BTS_NUMBER[x],BTS_NUMBER[x]); endif 
+      if(getline(line," 'BSC   NAME :' AND 'NUMBER  :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",BSC[x],BSC[x],BSC[x],BSC_NUMBER[x],BSC_NUMBER[x]); endif
+      if(getline(line," 'LA    NAME :' AND 'LAC     :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",LA[x],LA[x],LA[x],LAC[x],LAC[x]); endif 
+      if(getline(line," 'MOBILE COUNTRY CODE ....................(MCC)... :' ")) line=strreplace(line,"MOBILE COUNTRY CODE ....................(MCC)... :",""); strscan(line,"%s",MCC[x]); endif
+      if(getline(line," 'MOBILE NETWORK CODE ....................(MNC)... :' ")) line=strreplace(line,"MOBILE NETWORK CODE ....................(MNC)... :",""); strscan(line,"%s",MNC[x]); endif 
+      if(getline(line," 'CELL IDENTITY ..........................(CI).... :' ")) line=strreplace(line,"CELL IDENTITY ..........................(CI).... :",""); strscan(line,"%s",CI[x]); endif  
+      if(getline(line," 'BTS ADMINISTRATIVE STATE ....................... :' ")) line=strreplace(line,"BTS ADMINISTRATIVE STATE ....................... :",""); strscan(line,"%s",BTS_ADMIN[x]); endif  
+      if(getline(line," 'ROUTING ZONE ...........................(RZ).... :' ")) line=strreplace(line,"ROUTING ZONE ...........................(RZ).... :",""); strscan(line,"%s",RZ[x]); endif
+      if(getline(line," 'CHARGING AREA CODE .....................(CA).... :' ")) line=strreplace(line,"CHARGING AREA CODE .....................(CA).... :",""); strscan(line,"%s",CA[x]); endif  
+      if(getline(line," 'LOCATION NUMBER OF CELL ................(CLN)... :' ")) line=strreplace(line,"LOCATION NUMBER OF CELL ................(CLN)... :",""); strscan(line,"%s",CLN[x]); else CLN[x]=""; endif        
+    endwhile
+  endif
+        
+  if(RED=="3G")
+    tx("ZEPO:TYPE=SA;"); 
+    while(getline(line))
+      if(getline(line," 'SA    NAME :' AND 'NUMBER' "))x++; line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",SA[x],SA[x],SA[x],SA_NUMBER[x],SA_NUMBER[x]); endif 
+      if(getline(line," 'LA    NAME :' AND 'LAC' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",LA[x],LA[x],LA[x],LAC[x],LAC[x]); endif 
+      if(getline(line," 'MOBILE COUNTRY CODE' ")) line=strreplace(line,"MOBILE COUNTRY CODE ....................(MCC)... :",""); strscan(line,"%s",MCC[x]); endif
+      if(getline(line," 'MOBILE NETWORK CODE' ")) line=strreplace(line,"MOBILE NETWORK CODE ....................(MNC)... :",""); strscan(line,"%s",MNC[x]); endif 
+      if(getline(line," 'SERVICE AREA CODE' ")) line=strreplace(line,"SERVICE AREA CODE ......................(SAC)... :",""); strscan(line,"%s",CI[x]); endif
+      if(getline(line," 'ADMINISTRATIVE STATE' ")) line=strreplace(line,"ADMINISTRATIVE STATE ........................... :",""); strscan(line,"%s",BTS_ADMIN[x]); endif
+      if(getline(line," 'ROUTING ZONE' ")) line=strreplace(line,"ROUTING ZONE ...........................(RZ).... :",""); strscan(line,"%s",RZ[x]); endif
+      if(getline(line," 'CHARGING AREA CODE' ")) line=strreplace(line,"CHARGING AREA CODE .....................(CA).... :",""); strscan(line,"%s",CA[x]); endif  
+      if(getline(line," 'LOCATION NUMBER OF CELL' ")) line=strreplace(line,"LOCATION NUMBER OF CELL ................(CLN)... :",""); strscan(line,"%s",CLN[x]); else CLN[x]=""; endif        
+    endwhile
+  endif  
+  print("EXISTEN %d CELDAS %s\n\n",x,RED);
+  
+  if(RED=="2G") 
+    print("BTS,BTS_NUMBER,BSC,BSC_NUMBER,LA,LAC,MCC,MNC,CI,BTS_ADMIN,RZ,CA,CLN\n"); fileprint(handle2,"BTS,BTS_NUMBER,BSC,BSC_NUMBER,LA,LAC,MCC,MNC,CI,BTS_ADMIN,RZ,CA,CLN\n");
+    for(y=1;y<=x;y++) 
+      print("%s %s %s %s %s %s %s %s %s %s %s %s %s\n",BTS[y],BTS_NUMBER[y],BSC[y],BSC_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y]);
+      fileprint(handle2,"%s %s %s %s %s %s %s %s %s %s %s %s %s\n",BTS[y],BTS_NUMBER[y],BSC[y],BSC_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y]);
+    endfor 
+  endif 
+    
+  if(RED=="3G")  
+    print("SA,SA_NUMBER,LA,LAC,MCC,MNC,CI,ADMIN_STATE,RZ,CA,CLN\n"); fileprint(handle2,"SA,SA_NUMBER,LA,LAC,MCC,MNC,CI,ADMIN_STATE,RZ,CA,CLN\n");
+    for(y=1;y<=x;y++) 
+      print("%s %s %s %s %s %s %s %s %s %s %s \n",SA[y],SA_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y]);
+      fileprint(handle2,"%s %s %s %s %s %s %s %s %s %s %s \n",SA[y],SA_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y]);
+    endfor
+  endif
+  print("INVENTARIO ENVIADO  A FILE %s\n",filename2);
+  print("EXISTEN %d CELDAS %s\n\n",x,RED); 
+ 
+ endfunction
+

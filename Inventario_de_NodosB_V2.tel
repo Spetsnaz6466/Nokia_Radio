@@ -1,0 +1,109 @@
+#include <shellapi.hit>
+
+function Main()
+  string MSS="",line,Filter,PCTime,A,B,Portadora[];
+  string SA_NAME[],NUMBER[],LAC[],SAC[],RZ[],TA[],CA[];
+  string filename,filename2,filename3;
+  integer count=250,file_handle,x=0,y; 
+  integer handle,handle2;
+  
+  clr(); 
+  messagebox("\
+  ####  NOTA  ####\n\
+  Esta macro inventaria los parametros mas importantes de un SERVICE AREA(SA) y funciona de la siguiente manera:\n\
+  Desde un archivo externo que solo contiene los NUMBER de SA a inventariar se leen y cuentan estos, para luego ir inventariando SA por SA.\n\
+  Esta macro reporta: (SA NAME), (NUMBER), (LAC), (SAC), (RZ), (TA) y (SA).\n");
+    
+  ask(MSS,"Ingrese MSS a trabajar: "); device(MSS);
+  
+  PCTime = getpctime(1); strscan(PCTime,"%s %s",A,B); B=strreplace(B,":","-"); PCTime=A +"_" + B; print("%s",PCTime);
+  Filter = "Todos los archivos (*.txt)|*.*"; filename = askfile(Filter);
+  print("Archivo con NUMBER:\n%s...... \n",filename); file_handle = fileopen(filename,READ);   
+  
+  filename2= MSS + "__LOG__" + PCTime + "_.TXT" ; 
+  filename3= "RESUME_" + MSS + "_" + PCTime + "_.TXT" ;
+  handle = fileopen(filename2,NEW); fileclose(handle); logenable(LOG_ENABLE_ALL); logset(filename2,APPEND); 
+  handle2 = fileopen(filename3,NEW); 
+  
+  LOG_SQUARE("Contando portadoras");
+  while(fileread(file_handle,line,count)) x++; Portadora[x]=line; print("%s",line); endwhile
+  print("Total: %d portadoras\n",x);
+  y=x;
+  
+  LOG_SQUARE("Procesando informacion de portadoras");
+  tx("ZELO::RT=ALL;");
+  for(x=1;x<=y;x++)
+    tx("ZEPO:TYPE=SA,NO=%s:;",Portadora[x]); 
+    while(getline(line))
+      if(getline(line,"'SA    NAME :'"))
+        strfetch(line,"'SA    NAME :':14-38",SA_NAME[x]); SA_NAME[x]=strreplace(SA_NAME[x]," ","");
+        strfetch(line,"'NUMBER  :':10-38",NUMBER[x]);     strscan(NUMBER[x],"%s",NUMBER[x]);
+        print("SA NAME %s NUMBER %s ",SA_NAME[x],NUMBER[x]);       
+      endif     
+      if(getline(line,"'LAC     :'"))
+        strfetch(line,"'LAC     :':10-",LAC[x]);  strscan(LAC[x],"%s",LAC[x]);
+        print("LAC %s ",LAC[x]); endif      
+      if(getline(line,"'(SAC)... :'"))
+        strfetch(line,"'(SAC)... :':11-",SAC[x]); strscan(SAC[x],"%s",SAC[x]);
+        print("SAC %s ",SAC[x]); endif      
+      if(getline(line,"'(RZ).... :'"))
+        strfetch(line,"'(RZ).... :':11-",RZ[x]);  strscan(RZ[x],"%s",RZ[x]);
+        print("RZ %s ",RZ[x]);   endif     
+      if(getline(line,"'(TA).... :'"))
+        strfetch(line,"'(TA).... :':11-",TA[x]);  strscan(TA[x],"%s",TA[x]);
+        print("TA %s ",TA[x]);   endif      
+      if(getline(line,"'(CA).... :'"))
+        strfetch(line,"'(CA).... :':11-",CA[x]);  strscan(CA[x],"%s",CA[x]);
+        print("CA %s\n",CA[x]); endif
+    
+    endwhile 
+  endfor
+  
+  LOG_SQUARE("Grabando informacion de portadoras en archivo....");
+  fileprint(handle2,"SA_NAME NUMBER LAC SAC RZ TA CA\n");
+   for(x=1; x<=y; x++)
+     fileprint(handle2,"%s %s %s %s %s %s %s\n",SA_NAME[x],NUMBER[x],LAC[x],SAC[x],RZ[x],TA[x],CA[x]);
+   endfor 
+  fileclose(file_handle);  
+  print("Fin de macro!!");
+endfunction
+
+void function LOG_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor logprint("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor 
+ logprint("\n");
+endfunction
+
+
+void function SERVICE_AREA_INFORMATION(string Portadora)
+  string  line,SA_NAME,NUMBER,LAC,SAC,RZ,TA,CA;;
+ 
+  tx("ZEPO:TYPE=SA,NO=%s:;",Portadora); 
+  while(getline(line))
+    if(getline(line,"'SA    NAME :'"))
+      strfetch(line,"'SA    NAME :':14-38",SA_NAME); SA_NAME=strreplace(SA_NAME," ","");
+      strfetch(line,"'NUMBER  :':10-38",NUMBER);     strscan(NUMBER,"%s",NUMBER);
+      print("SA NAME %s NUMBER %s ",SA_NAME,NUMBER);       
+    endif     
+    if(getline(line,"'LAC     :'"))
+      strfetch(line,"'LAC     :':10-",LAC);  strscan(LAC,"%s",LAC);
+      print("LAC %s ",LAC); endif      
+    if(getline(line,"'(SAC)... :'"))
+      strfetch(line,"'(SAC)... :':11-",SAC); strscan(SAC,"%s",SAC);
+      print("SAC %s ",SAC); endif      
+    if(getline(line,"'(RZ).... :'"))
+      strfetch(line,"'(RZ).... :':11-",RZ);  strscan(RZ,"%s",RZ);
+      print("RZ %s ",RZ);   endif     
+    if(getline(line,"'(TA).... :'"))
+      strfetch(line,"'(TA).... :':11-",TA);  strscan(TA,"%s",TA);
+      print("TA %s ",TA);   endif      
+    if(getline(line,"'(CA).... :'"))
+      strfetch(line,"'(CA).... :':11-",CA);  strscan(CA,"%s",CA);
+      print("CA %s\n",CA); endif
+  endwhile
+ 
+  
+
+endfunction

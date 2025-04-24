@@ -1,0 +1,49 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+//Esta macro encuentra todas las IP creadas en un RNC devuelve datos como BTSID, AAIF, ATMIF, VPI
+//WBTSIP, WBTSTRS, WBTSDGW. Se basa en la fecha de integracion para considerar las alarmas de la celda. JEC.
+function main()
+  string wbtsid="",temp="",line="",atmif="",aaif="",wbtsip="",wbtsdgw="",wbtstrs="",ANI="",rnc;
+  string wbtsname,wbtsdate,ExcelFile="",Filter="",vpi_cat,vpi_cps,vpi_wo,vpi2; 
+  integer rou,vpi,ROW,COL,n,WBTS,etnum;  
+
+  Filter = "xml files (*.*)|*.xls"; 
+  ExcelFile = askfile(Filter); ExcelFile=strreplace(ExcelFile,"\\","\\\\" );  
+  WBTS=EXCELL_FILE_OPEN( ExcelFile); 
+  n=2386; wbtsid="1"; wbtsip="0";                     
+
+  while (wbtsid<>"")
+    ROW=n; COL=5;  wbtsid=EXCELL_CELL_READ(WBTS,ROW,COL); print("wbtsid %s\n",wbtsid); 
+    ROW=n; COL=2; rnc=EXCELL_CELL_READ(WBTS,ROW,COL);  
+    device(rnc);
+    EXCELL_CELL_FILLOUT(WBTS,ROW,4,"MACRO");
+    ANI=ANI(wbtsid); 
+    tx("ZRRI;");
+    if(getline(line," '%s'",ANI)) 
+      rou=strtoint(ROUTE(ANI),DEC); temp=inttostr(rou,DEC); 
+      temp=FIND_ATMIF_VPI( temp); temp=strreplace(temp,"_"," ");
+      strfetch(temp,"1-2, 3-",atmif,vpi2); vpi=strtoint(vpi2,DEC);
+      EXCELL_CELL_FILLOUT(WBTS,ROW,8,atmif); 
+      EXCELL_CELL_FILLOUT(WBTS,ROW,9,inttostr(vpi,DEC)); 
+      aaif=AA_INTERFACE(atmif,inttostr(vpi,DEC));
+      EXCELL_CELL_FILLOUT(WBTS,ROW,10,aaif); 
+      wbtstrs=WBTS_TRS_IP(aaif);
+      if(wbtstrs=="ERROR")
+       EXCELL_CELL_FILLOUT(WBTS,ROW,6,wbtstrs); 
+      else  
+       EXCELL_CELL_FILLOUT(WBTS,ROW,6,wbtstrs); 
+      endif
+       temp=WBTS_VP(atmif,inttostr(vpi,DEC));
+       strscan(temp,"%s %s %s",vpi_cat,vpi_cps,vpi_wo);  
+       etnum=strtoint(WBTS_ET( vpi_cps),DEC); 
+       EXCELL_CELL_FILLOUT(WBTS,ROW,7,inttostr(etnum,DEC));
+    endif 
+    EXCELL_CELL_FILLOUT(WBTS,ROW,4,"");
+    
+   n++;
+   ROW=n; 
+endwhile
+
+endfunction

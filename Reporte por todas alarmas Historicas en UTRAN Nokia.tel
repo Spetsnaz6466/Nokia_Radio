@@ -1,0 +1,80 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string temp,filename,line,wbtsname,fechainicio,horainicio,fechatermino,horatermino;
+  string RNC[],REGION[],RNC_NAME[],PCTime,Filter,ExcelFile;
+  integer handle,file_handle,x,y=4;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+ 
+  RNC[1]="BANR1"; REGION[1]="5"; RNC_NAME[1]="BANDERAS_1";
+  RNC[2]="BANR2"; REGION[2]="5"; RNC_NAME[2]="BANDERAS_2";
+  RNC[3]="COLR1"; REGION[3]="5"; RNC_NAME[3]="COLIMA_1";
+  RNC[4]="FUER1"; REGION[4]="5"; RNC_NAME[4]="FUENTES_1";
+  RNC[5]="FUER2"; REGION[5]="5"; RNC_NAME[5]="FUENTES_2";
+  RNC[6]="MORR1"; REGION[6]="5"; RNC_NAME[6]="MORELIA_1";
+  RNC[7]="MORR2"; REGION[7]="5"; RNC_NAME[7]="MORELIA_2";
+  RNC[8]="PROR1"; REGION[8]="5"; RNC_NAME[8]="PROVIDENCIA_1";
+  RNC[9]="PROR2"; REGION[9]="5"; RNC_NAME[9]="PROVIDENCIA_2";
+  RNC[10]="PROR3"; REGION[10]="5"; RNC_NAME[10]="PROVIDENCIA_3";
+  RNC[11]="PVRR1"; REGION[11]="5"; RNC_NAME[11]="PUERTO_VALLARTA_1";
+  RNC[12]="PVRR2"; REGION[12]="5"; RNC_NAME[12]="PUERTO_VALLARTA_2";
+  RNC[13]="TLAR1"; REGION[13]="5"; RNC_NAME[13]="TLAQUEPAQUE_1";
+  RNC[14]="URUR1"; REGION[14]="5"; RNC_NAME[14]="URUAPAN_1";
+  RNC[15]="CHLR1"; REGION[15]="7"; RNC_NAME[15]="CHILPANCINGO_1";
+  RNC[16]="CZAR1"; REGION[16]="7"; RNC_NAME[16]="CUATZACUALCOS_1";
+  RNC[17]="CZAR2"; REGION[17]="7"; RNC_NAME[17]="CUATZACUALCOS_2";
+  RNC[18]="FTER1"; REGION[18]="7"; RNC_NAME[18]="FUERTES_1";
+  RNC[19]="FTER2"; REGION[19]="7"; RNC_NAME[19]="FUERTES_2";
+  RNC[20]="FTER3"; REGION[20]="7"; RNC_NAME[20]="FUERTES_3";
+  RNC[21]="HIDR1"; REGION[21]="7"; RNC_NAME[21]="HIDALGO_1";
+  RNC[22]="HIDR2"; REGION[22]="7"; RNC_NAME[22]="HIDALGO_2";
+  RNC[23]="LERR1"; REGION[23]="7"; RNC_NAME[23]="LERDO_1";
+  RNC[24]="LERR2"; REGION[24]="7"; RNC_NAME[24]="LERDO_2";
+  RNC[25]="LERR3"; REGION[25]="7"; RNC_NAME[25]="LERDO_3";
+  RNC[26]="LPPR1"; REGION[26]="7"; RNC_NAME[26]="LA_PAZ_1";
+  RNC[27]="OAXR1"; REGION[27]="7"; RNC_NAME[27]="OAXACA_1";
+  RNC[28]="OAXR2"; REGION[28]="7"; RNC_NAME[28]="OAXACA_2";
+  RNC[29]="POZR1"; REGION[29]="7"; RNC_NAME[29]="POZA_RICA_1";
+  RNC[30]="XALR1"; REGION[30]="7"; RNC_NAME[30]="XALAPA_1";
+  RNC[31]="XALR2"; REGION[31]="7"; RNC_NAME[31]="XALAPA_2";
+  RNC[32]="BONR1"; REGION[32]="8"; RNC_NAME[32]="BONANPAK_1";
+  RNC[33]="BONR2"; REGION[33]="8"; RNC_NAME[33]="BONANPAK_2";
+  RNC[34]="CASR1"; REGION[34]="8"; RNC_NAME[34]="CASCADA_1";
+  RNC[35]="CASR2"; REGION[35]="8"; RNC_NAME[35]="CASCADA_2";
+  RNC[36]="CASR3"; REGION[36]="8"; RNC_NAME[36]="CASCADA_3";
+  RNC[37]="PLZR1"; REGION[37]="8"; RNC_NAME[37]="PLAZA_1";
+  RNC[38]="PLZR2"; REGION[38]="8"; RNC_NAME[38]="PLAZA_2";
+  RNC[39]="PLZR3"; REGION[39]="8"; RNC_NAME[39]="PLAZA_3";
+  RNC[40]="VJZR1"; REGION[40]="8"; RNC_NAME[40]="VILLA_HERMOSA_1";
+  RNC[41]="VJZR2"; REGION[41]="8"; RNC_NAME[41]="VILLA_HERMOSA_2";
+  RNC[42]="VJZR3"; REGION[42]="8"; RNC_NAME[42]="VILLA_HERMOSA_3";
+  
+  ask(fechainicio,"Fecha de inicio (Default=HOY) [YYYY-MM_DD]:  ");   ask(horainicio,"Hora de inicio  [HH-MM-SS]:  ");
+  ask(fechatermino,"Fecha de termino (Default=HOY) [YYYY-MM_DD]:  "); ask(horatermino,"Hora de termino [HH-MM-SS]: ");
+    
+  filename="NSN_HISTORICO_UTRAN_TODAS_ALARMA_"+ PCTime +".TXT";
+  
+  file_handle = fileopen(filename,NEW); fileclose(file_handle);
+ 
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=1;x<=42;x++)                       /////####### PARA PONER MAS RNC's cambiar 39 a valor deseado########
+   temp= inttostr(x,DEC) + "/42  ACCESANDO  A  " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];
+   pause(1,temp); device(RNC[x]); 
+   temp=REGION[x] + "__" + RNC[x] + "__" + RNC_NAME[x]; 
+   LOG_SQUARE(temp); 
+   logenable(LOG_ENABLE_ALL); 
+   logset(filename,APPEND); 
+   LOG_SQUARE(temp);    
+   temp="ZAHP:::" + fechainicio + "," + horainicio + "," + fechatermino + "," + horatermino + ";"; 
+   tx(temp); 
+   logclose();    
+   deviceclose(RNC[x]);
+  endfor    
+  winexec(strprint("NotePad %s",filename)); 
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction

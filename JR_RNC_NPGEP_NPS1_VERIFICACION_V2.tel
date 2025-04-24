@@ -1,0 +1,131 @@
+#include <shellapi.hit>
+
+function main()
+  string filename,filename2,temp,line;
+  string RNC[],REGION[],RNC_NAME[],PCTime,NPGEP[],NPS1[];
+  string pit,pii,sen,iti,a[],slot;
+  integer handle,handle2,x,y,TOTAL,fileaccess,z;
+  
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime);
+  RNC[1]="COLR1"; REGION[1]="R5"; RNC_NAME[1]= "COLIMA";                //////##### RNC[1]=COLR1 es el nombre de la sesion telnet
+  RNC[2]="FUER1"; REGION[2]="R5"; RNC_NAME[2]= "FUENTES";               /////#### REGION[]= es solo para informar, no se usa   
+  RNC[3]="PROR1"; REGION[3]="R5"; RNC_NAME[3]= "PROVIDENCIA"; /*jec*/   /////#### RNC_NAME[]= Nombre del RNC analizado.
+  RNC[4]="MORR1"; REGION[4]="R5"; RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1"; REGION[5]="R5"; RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1"; REGION[6]="R5"; RNC_NAME[6]= "PUERTO VALLARTA";
+  RNC[7]="URUR1"; REGION[7]="R5"; RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1"; REGION[8]="R7"; RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1"; REGION[9]="R7"; RNC_NAME[9]="FUERTES"; 
+  RNC[10]="CZAR1"; REGION[10]="R7"; RNC_NAME[10]="COATZACOALCOS";
+  RNC[11]="OAXR1"; REGION[11]="R7"; RNC_NAME[11]="OAXACA"; 
+  RNC[12]="XALR1"; REGION[12]="R7"; RNC_NAME[12]="XALAPA";
+  RNC[13]="HIDR1"; REGION[13]="R7";  RNC_NAME[13]="HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; REGION[14]="R8"; RNC_NAME[14]="PLAZA";
+  RNC[15]="CASR1"; REGION[15]="R8"; RNC_NAME[15]="CANCUN"; 
+  RNC[16]="VJZR1"; REGION[16]="R8"; RNC_NAME[16]="VILLA HERMOSA";
+  RNC[17]="BONR1"; REGION[17]="R8"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; REGION[18]="R5"; RNC_NAME[18]="TLAQUEPAQUE";
+  RNC[19]="LPPR1"; REGION[19]="R7"; RNC_NAME[19]= "LA PAZ"; 
+  RNC[20]="PVRR2"; REGION[20]="R8"; RNC_NAME[20]="PUERTO VALLARTA 2"; 
+  RNC[21]="LERR2"; REGION[21]="R8"; RNC_NAME[21]="LERDO 2";
+  RNC[22]="OAXR2"; REGION[22]="R8"; RNC_NAME[22]= "OAXACA 2"; 
+  RNC[23]="VJZR2"; REGION[23]="R5"; RNC_NAME[23]="VILLA HERMOSA 2";
+  RNC[24]="CZAR2"; REGION[24]="R7"; RNC_NAME[24]= "COATZACOALCOS 2"; 
+  RNC[25]="HIDR2"; REGION[25]="R5"; RNC_NAME[25]="HIDALGO 2";
+  RNC[26]="XALR2"; REGION[26]="R7"; RNC_NAME[26]= "XALAPA 2"; 
+  RNC[27]="FTER2"; REGION[27]="R7"; RNC_NAME[27]= "FUERTES 2";
+  RNC[28]="BONR2"; REGION[28]="R7"; RNC_NAME[28]= "BONANPAK 2";
+  RNC[29]="CASR2"; REGION[29]="R7"; RNC_NAME[29]= "CASCADA 2";
+  RNC[30]="PLZR2"; REGION[30]="R7"; RNC_NAME[30]= "PLAZA 2";
+   
+  /* Creando archivos si este existe crea una copia con extension V2 */
+  filename="VERIFICACION_NPGEP_Y_EN_NPS1_EN_RNCs_"+ PCTime +".TXT";     /////#### Aqui se pone el nombre del archivo de salida
+  if(fileaccess(filename)==1) 
+    filename="VERIFICACION_NPGEP_Y_EN_NPS1_EN_RNCs_V2_"+ PCTime +".TXT"; endif
+  print("Creating file %s \n",filename); handle = fileopen(filename,NEW); 
+  /* Creando archivos si este existe crea una copia con extension V2 */
+  filename2="CODIGOS_NPGEP_Y_EN_NPS1_EN_RNCs_"+ PCTime +".TXT";     /////#### Aqui se pone el resultado
+  if(fileaccess(filename2)==1)
+   filename2="CODIGOS_NPGEP_Y_EN_NPS1_EN_RNCs__V2_"+ PCTime +".TXT"; endif
+  print("Creating file %s \n",filename2); handle2=fileopen(filename2,NEW);       
+  fileclose(handle); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); 
+  
+  /* Comienza revision en la red, donde X es la variable de Inicio y de fin, asi 
+  con X=1 significa que se comienza con el RNC de COLR1 o Colima, por ejemplo si
+  deseo conversar de la Paz, X debera de ser igual a 19, el valor de x<31 significa que
+  son maximo 30 RNC's pero tambien se puede poner como limite, por ejemplo si 
+  deseo terminar en OAXR2 X sera menor de 23 */ 
+  
+  for(x=21;x<=21;x++)    /*Si son 30 RNC's entonces el limite es x<31, siempre 1 mas */
+   logclose(); device(RNC[x]);
+  
+   /* /30 Nos da la cantidad total de RNC a analizar, cambie el 30 por su cantidad total */
+   temp= inttostr(x,DEC) + "/30  ACCESING TO " + REGION[x]+ "  " + RNC[x] + "  " + RNC_NAME[x];  
+   pause(3,temp); logenable(LOG_ENABLE_ALL); logset(filename,APPEND); LOG_SQUARE(RNC_NAME[x]);
+   
+   /* NPGEP's */
+   tx("ZUSI:NPGEP;"); y=1;     
+   while(getline(line,"'NPGEP-'")) 
+     strscan(line,"%s",temp); NPGEP[y]=strreplace(temp,"NPGEP-",""); y++; endwhile
+   print("%s tiene %d NPGEPs\n",RNC[x],y-1); TOTAL=y-1;    
+   for(y=1; y <=TOTAL; y++) 
+     tx("ZDDE:NPGEP,%s:\"jane hwstatus -d\";",NPGEP[y]); 
+     //delay(60);
+     //send("jane hwstatus -d\r"); delay(30);     
+   //  send("exit\n"); delay(60); */
+     
+     if(getline(line,"'UNKNOWN COMMAND'"))
+      temp="SIN ACCESO A NPGEP "+NPGEP[y]; pause(5,temp); send("\r"); print("%s \n",temp); endif
+   endfor
+   
+   /* NPS1's 
+   tx("ZUSI:NPS1;"); y=1; TOTAL=1;
+   while(getline(line,"'NPS1-'")) 
+     strscan(line,"%s",temp); NPS1[y]=strreplace(temp,"NPS1-",""); y++; endwhile
+   print("%s tiene %d NPS1\n",RNC[x],y-1); TOTAL=y-1; 
+   for(y=1; y <=TOTAL; y++) 
+     send("ZDDS:NPS1,%s;\r",NPS1[y]); delay(60);
+     send("jane hwstatus -d\r"); delay(60);
+     send("exit\n"); delay(60);
+     if(getline(line,"'UNKNOWN COMMAND'"))
+      temp="SIN ACCESO A NPS1 "+NPS1[y]; pause(5,temp); send("\r"); print("%s \n",temp); endif
+   endfor
+   y=1; TOTAL=1;
+
+   /* MISCELANEOS*/ 
+   
+   logclose();
+   z=1;
+   tx("ZWFL:S;");
+   while(getline(line," 'sut' "))
+     strscan(line,"%s ",a[z]); a[z]=strreplace(a[z],":",","); z++; 
+   endwhile
+   TOTAL=z-1; z=1;
+   
+   while(z<TOTAL)
+     tx("ZWFL:P:%s;",a[z]);
+     while(getline(line," 'NP2GE' OR 'NP8' ")) 
+       strscan(line,"%s %s %s %s %s",slot,pit,pii,sen,iti);
+       line=a[z]+" "+ line; print(line);
+       fileprint(handle2,"%s %s %s %s %s %s %s\n",RNC[x],a[z],slot,pit,pii,sen,iti);
+     endwhile  
+     z++;
+   endwhile
+   TOTAL=1;
+   deviceclose(RNC[x]); 
+   
+  endfor
+   winexec(strprint("NotePad %s",filename)); 
+  messagebox("FIN DE LA MACRO!!");
+
+endfunction
+
+///////#### Seccion funciones
+
+void function LOG_SQUARE(string information )
+ integer x,y=1; 
+ x = strlength(information); x= x + 4; 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor logprint("\n# %s #\n",information); 
+ for(y=1 ; y<=x ; y++) logprint("#"); endfor 
+ logprint("\n");
+endfunction

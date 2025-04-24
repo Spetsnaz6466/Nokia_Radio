@@ -1,0 +1,39 @@
+
+/****************************************************************/
+/* This Macro connects to these especific device (telnet) sessions of HIT      
+/* ABRIL 17 2008 , update the value of "n" to show more options on the Menu.
+/****************************************************************/
+
+string function ACCESO_REMOTO()
+ string TEL_RNC[],RNC[],RNC2;
+ integer z,x[],n=19;
+ 
+ TEL_RNC[1]="COLR1";   RNC[1]="R5     COLR1     COLIMA";
+ TEL_RNC[2]="FUER1";   RNC[2]="R5     FUER1     FUENTES";
+ TEL_RNC[3]="PROR1";   RNC[3]="R5     PROR1     PROVIDENCIA"; /*jec*/
+ TEL_RNC[4]="MORR1";   RNC[4]="R5     MORR1     MORELIA"; 
+ TEL_RNC[5]="BANR1";   RNC[5]="R5     BANR1     BANDERAS";
+ TEL_RNC[6]="PVRR1";   RNC[6]="R5     PVRR1     PUERTO VALLARTA";
+ TEL_RNC[7]="URUR1";   RNC[7]="R5     URUR1     URUAPAN"; 
+ TEL_RNC[8]="LERR1";   RNC[8]="R7     LERR1     LERDO";
+ TEL_RNC[9]="FTER1";   RNC[9]="R7     FTER1     FUERTES"; 
+ TEL_RNC[10]="CZAR1"; RNC[10]="R7     CZAR1     COATZACOALCOS";
+ TEL_RNC[11]="OAXR1"; RNC[11]="R7     OAXR1     OAXACA"; 
+ TEL_RNC[12]="XALR1"; RNC[12]="R7     XALR1     XALAPA";
+ TEL_RNC[13]="HIDR1"; RNC[13]="R7     HIDR1     HIDALGO / ACAPULCO"; 
+ TEL_RNC[14]="PLZR1"; RNC[14]="R8     PLZR1     PLAZA";
+ TEL_RNC[15]="CASR1"; RNC[15]="R8     CASR1     CANCUN"; 
+ TEL_RNC[16]="VJZR1"; RNC[16]="R8     VJZR1     VILLA HERMOSA";
+ TEL_RNC[17]="BONR1"; RNC[17]="R8     BONR1     BONAMPAK"; 
+ TEL_RNC[18]="LPPR1"; RNC[18]="R5     LPPR1     LA PAZ"; 
+ TEL_RNC[19]="TLAR1"; RNC[19]="R5     TLAR1     TLAQUEPAQUE"; 
+ 
+ z = askselection(RNC,x,n,RADIO,SINGLE, "      NOKIA 3G RNC'S");
+ RNC2=TEL_RNC[z]; 
+ device(TEL_RNC[z]); 
+ return RNC2;
+endfunction
+
+
+
+

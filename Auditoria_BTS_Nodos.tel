@@ -1,0 +1,65 @@
+
+function main() 
+  string line,Filter,filename,filename2,filename3,Tel,A,B,PCTime,RED;
+  string BTS[],BTS_NUMBER[],BSC[],BSC_NUMBER[],LA[],LAC[],MCC[],MNC[],CI[],BTS_ADMIN[],RZ[],CA[],CLN[],SA[],SA_NUMBER[];
+  string NUMBER,temp[];
+  integer count=150,handle,handle2,file_handle,x=0,y;  
+  
+  messagebox("ESTA MACRO AUDITA CELDAS INGRESADAS POR FILE.TXT, RESULTADOS VAN A MESSAGE WINDOW Y A FILE......."); 
+  clr(); Tel="MSS03MA"; ask(Tel,"INGRESE MSS ? "); device(Tel);  tx("ZDCD;"); 
+  if(getline(line,"'TIME  '")) strscan(line,"%s %s %s",A,A,B); B=strreplace(B,":","-"); PCTime = A + "_" + B; 
+    filename= Tel + "_LOG_AUDITORIA_CELDAS_" + PCTime + ".TXT" ; handle = fileopen(filename,NEW); fileclose(handle); logenable(LOG_ENABLE_ALL); logset(filename,APPEND);      
+    filename2= Tel + "_OUT_AUDITORIA_CELDAS_" + PCTime + ".TXT" ; handle2 = fileopen(filename2,NEW);      
+  endif
+       
+  ask(RED,"FOR 2G TYPE: 2G AND FOR 3G TYPE: 3G"); RED=strupper(RED); print("\n\nEJECUTANDO AUDITORIA SOBRE CELDAS: %s ",RED);
+  messagebox("CARGAR ARCHIVO CON CELDAS A AUDITAR...");
+  Filter = "Todos los archivos (*.txt)|*.*"; filename3 = askfile(Filter); print("\n\nLISTADO DE CELDAS TOMADAS DEL ARCHIVO: '%s' \n",filename3); file_handle = fileopen(filename3,READ); x=1;
+  
+  while(1) 
+    if(fileread(file_handle,line,count))
+      strscan(line,"%s",NUMBER);
+      if(RED=="2G") tx("ZEPO:TYPE=BTS,NO=%s;",NUMBER); elseif(RED=="3G") tx("ZEPO:TYPE=SA,NO=%s;",NUMBER); endif  
+      if(RED=="2G") 
+        if(getline(line," 'BTS   NAME :' AND 'NUMBER  :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",BTS[x],BTS[x],BTS[x],BTS_NUMBER[x],BTS_NUMBER[x]); endif 
+        if(getline(line," 'BSC   NAME :' AND 'NUMBER  :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",BSC[x],BSC[x],BSC[x],BSC_NUMBER[x],BSC_NUMBER[x]); endif 
+      elseif(RED=="3G") 
+        if(getline(line," 'SA    NAME :' AND 'NUMBER  :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",SA[x],SA[x],SA[x],SA_NUMBER[x],SA_NUMBER[x]); endif 
+      endif
+      if(getline(line," 'LA    NAME :' AND 'LAC     :' ")) line=strreplace(line,":",""); strscan(line,"%s %s %s %s %s",LA[x],LA[x],LA[x],LAC[x],LAC[x]); endif 
+      if(getline(line," 'MOBILE COUNTRY CODE ....................(MCC)... :' ")) line=strreplace(line,"MOBILE COUNTRY CODE ....................(MCC)... :",""); strscan(line,"%s",MCC[x]); endif
+      if(getline(line," 'MOBILE NETWORK CODE ....................(MNC)... :' ")) line=strreplace(line,"MOBILE NETWORK CODE ....................(MNC)... :",""); strscan(line,"%s",MNC[x]); endif 
+      if(RED=="2G") 
+        if(getline(line," 'CELL IDENTITY ..........................(CI).... :' ")) line=strreplace(line,"CELL IDENTITY ..........................(CI).... :",""); strscan(line,"%s",CI[x]); endif  
+      elseif(RED=="3G")    
+        if(getline(line," 'SERVICE AREA CODE ......................(SAC)... :' ")) line=strreplace(line,"SERVICE AREA CODE ......................(SAC)... :",""); strscan(line,"%s",CI[x]); endif 
+      endif    
+      if(RED=="2G")  
+        if(getline(line," 'BTS ADMINISTRATIVE STATE ....................... :' ")) line=strreplace(line,"BTS ADMINISTRATIVE STATE ....................... :",""); strscan(line,"%s",BTS_ADMIN[x]); endif  
+      elseif(RED=="3G") 
+        if(getline(line," 'ADMINISTRATIVE STATE ........................... :' ")) line=strreplace(line,"ADMINISTRATIVE STATE ........................... :",""); strscan(line,"%s",BTS_ADMIN[x]); endif
+      endif
+      if(getline(line," 'ROUTING ZONE ...........................(RZ).... :' ")) line=strreplace(line,"ROUTING ZONE ...........................(RZ).... :",""); strscan(line,"%s",RZ[x]); endif
+      if(getline(line," 'CHARGING AREA CODE .....................(CA).... :' ")) line=strreplace(line,"CHARGING AREA CODE .....................(CA).... :",""); strscan(line,"%s",CA[x]); endif  
+      if(getline(line," 'LOCATION NUMBER OF CELL ................(CLN)... :' ")) line=strreplace(line,"LOCATION NUMBER OF CELL ................(CLN)... :",""); strscan(line,"%s",CLN[x]); endif 
+      if(RZ[x]=="-") temp[x]="NOK"; elseif(CA[x]=="-") temp[x]="NOK"; elseif(CLN[x]=="-") temp[x]="NOK"; else temp[x]="OK"; endif   x++;  
+    else break;
+    endif
+  endwhile
+  x=x-1; 
+  print("\n\nSE AUDITAN: %d CELDA %s\n\n",x,RED);
+  
+  if(RED=="2G") 
+    print("BTS,BTS_NUMBER,BSC,BSC_NUMBER,LA,LAC,MCC,MNC,CI,BTS_ADMIN,RZ,CA,CLN\n"); fileprint(handle2,"BTS,BTS_NUMBER,BSC,BSC_NUMBER,LA,LAC,MCC,MNC,CI,BTS_ADMIN,RZ,CA,CLN\n");  
+    for(y=1;y<=x;y++) 
+      fileprint(handle2,"%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",BTS[y],BTS_NUMBER[y],BSC[y],BSC_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y],temp[y]); print("%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",BTS[y],BTS_NUMBER[y],BSC[y],BSC_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y],temp[y]);
+    endfor   
+  elseif(RED=="3G")  
+    print("SA,SA_NUMBER,LA,LAC,MCC,MNC,CI,ADMIN_STATE,RZ,CA,CLN\n"); fileprint(handle2,"SA,SA_NUMBER,LA,LAC,MCC,MNC,CI,ADMIN_STATE,RZ,CA,CLN\n");
+    for(y=1;y<=x;y++) 
+      fileprint(handle2,"%s %s %s %s %s %s %s %s %s %s %s %s\n",SA[y],SA_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y],temp[y]); print("%s %s %s %s %s %s %s %s %s %s %s %s\n",SA[y],SA_NUMBER[y],LA[y],LAC[y],MCC[y],MNC[y],CI[y],BTS_ADMIN[y],RZ[y],CA[y],CLN[y],temp[y]);
+    endfor
+  endif
+  print("\n\nRESULTADOS DE AUDITORIA GRABADOS EN FILE: %s",filename2);  
+ endfunction
+

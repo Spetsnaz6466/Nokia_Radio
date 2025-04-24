@@ -1,0 +1,131 @@
+#include <shellapi.hit>
+#include "Devices.tel"
+#include "ANALISYS_2.tel"
+
+function main()
+  string line,temp,ExcelFile,wbtsid="",wbtsname,filename;
+  string RNC[],RNC_NAME[],PCTime;
+  string ExcelFile2,CELL_ID,CELL_STATE;
+  integer ROW=2283,ROW0,handle,x,y,CONT,CONT0,i;
+  string old_value;
+
+  PCTime = getpctime(1); strfetch(PCTime,"1-10",PCTime); 
+    
+  /* Se abre 2 veces archivo excell */
+  ExcelFile = getworkdir() + "Reporte_de_WBTS_WO_SECTORS_Nodos_B_NSN_Plantilla.xls";
+  ExcelFile2 = getworkdir() + "Reporte_de_WBTS_WO_SECTORS_Nodos_B_NSN_" + PCTime + ".XLS";
+  
+  filecopy(ExcelFile,ExcelFile2);
+  ExcelFile=strreplace(ExcelFile2,"\\","\\\\" );  
+  print("excell file %s ",ExcelFile);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile); delay(5000);
+  handle=EXCELL_FILE_OPEN_ALARM_REPORT(ExcelFile);
+  
+  /*Definicion de RNC's a analizar, pueden aumentarse o disminuirse, el orden de la matriz es importante*/
+  RNC[1]="COLR1";  RNC_NAME[1]= "COLIMA";                //////##### RNC[1]=COLR1 es el nombre de la sesion telnet
+  RNC[2]="FUER1";  RNC_NAME[2]= "FUENTES";                
+  RNC[3]="PROR1";  RNC_NAME[3]= "PROVIDENCIA";           /////#### RNC_NAME[]= Nombre del RNC analizado.
+  RNC[4]="MORR1";  RNC_NAME[4]= "MORELIA"; 
+  RNC[5]="BANR1";  RNC_NAME[5]= "BANDERAS";
+  RNC[6]="PVRR1";  RNC_NAME[6]= "PUERTO_VALLARTA";
+  RNC[7]="URUR1";  RNC_NAME[7]= "URUAPAN"; 
+  RNC[8]="LERR1";  RNC_NAME[8]= "LERDO";
+  RNC[9]="FTER1";  RNC_NAME[9]= "FUERTES"; 
+  RNC[10]="CZAR1"; RNC_NAME[10]= "COATZACOALCOS";
+  RNC[11]="OAXR1"; RNC_NAME[11]= "OAXACA"; 
+  RNC[12]="XALR1"; RNC_NAME[12]= "XALAPA";
+  RNC[13]="HIDR1"; RNC_NAME[13]= "HIDALGO_ACAPULCO"; 
+  RNC[14]="PLZR1"; RNC_NAME[14]= "PLAZA";
+  RNC[15]="CASR1"; RNC_NAME[15]= "CANCUN"; 
+  RNC[16]="VJZR1"; RNC_NAME[16]= "VILLA_HERMOSA";
+  RNC[17]="BONR1"; RNC_NAME[17]= "BONAMPAK"; 
+  RNC[18]="TLAR1"; RNC_NAME[18]= "TLAQUEPAQUE";
+  RNC[19]="LPPR1"; RNC_NAME[19]= "LA_PAZ"; 
+  RNC[20]="PVRR2"; RNC_NAME[20]= "PUERTO_VALLARTA 2"; 
+  RNC[21]="LERR2"; RNC_NAME[21]= "LERDO_2";
+  RNC[22]="OAXR2"; RNC_NAME[22]= "OAXACA_2"; 
+  RNC[23]="VJZR2"; RNC_NAME[23]= "VILLA_HERMOSA_2";
+  RNC[24]="CZAR2"; RNC_NAME[24]= "COATZACOALCOS_2"; 
+  RNC[25]="HIDR2"; RNC_NAME[25]= "HIDALGO_2";
+  RNC[26]="XALR2"; RNC_NAME[26]= "XALAPA_2"; 
+  RNC[27]="FTER2"; RNC_NAME[27]= "FUERTES_2";
+  RNC[28]="BONR2"; RNC_NAME[28]= "BONANPAK_2";
+  RNC[29]="CASR2"; RNC_NAME[29]= "CASCADA_2";
+  RNC[30]="PLZR2"; RNC_NAME[30]= "PLAZA_2";         
+  RNC[31]="FUER2"; RNC_NAME[31]= "FUENTES_2";
+  RNC[32]="PROR2"; RNC_NAME[32]= "PROVIDENCIA_2";
+  RNC[33]="POZR1"; RNC_NAME[33]= "POZA_RICA";     
+   
+  /*Aqui comienza el programa buscando hasta 17 RNC, notese que x<18, x define la cantidad de RNC's*/ 
+  for(x=30;x<31;x++)
+   temp="Accesando a RNC " + RNC[x] + "_" + RNC_NAME[x];
+   pause(5,temp);
+   /*Acceso al Device de turno, llama funcion que inserta clave automaticamente*/
+   device(RNC[x]); 
+   
+   EXCELL_CELL_FILLOUT(handle,1,1,RNC[x]); //Lleno la hoja excell con el RNC a trabajar ese momento.
+  
+   /*Dentro del RNC se leen todos los COCOS's, obtenemos WBTS-ID's y llenamos la hoja Excel, 
+     una celda sin COCO es una celda que no funciona*/  
+   tx("ZRRI;"); CONT=1; ROW0=ROW;
+   while(getline(line," 'A0'")) 
+     strfetch(line,"33-41",temp); strfetch(temp,"3-6",temp);
+     EXCELL_CELL_FILLOUT(handle,ROW,1,RNC[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,2,RNC[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,3,RNC_NAME[x]); 
+     EXCELL_CELL_FILLOUT(handle,ROW,4,temp); ROW++; CONT++;
+   endwhile
+   /*Mensaje que comunica cuantos NodosB hay en el RNC*/
+   CONT0=CONT-1; temp="RNC "+RNC[x]+ "_" + RNC_NAME[x] + " tiene " + inttostr(CONT0,DEC) + " celdas"; pause(3,temp);
+   y=ROW-CONT+1; 
+   /*Macro lee Excel, consulta WBTS, luego averigua si tiene alarmas, si tuviese crea log con alarmas*/
+   for(i=1 ; i<=CONT0 ; i++)
+     wbtsid=EXCELL_CELL_READ(handle,ROW0,4); print("reading wbts %s \n",wbtsid);
+     temp="ZDDE:ICSU:\"ZLP:8,E2K\",\"8\",\"BD:"+wbtsid+",1;\",\"ZL:8\";";
+     tx(temp); 
+     if(getline(line," '-01              ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE);  
+      EXCELL_CELL_FILLOUT(handle,ROW0,5,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,6,CELL_STATE);  
+     elseif(getline(line," 'Selected BTS ID doesn' "))
+      EXCELL_CELL_FILLOUT(handle,ROW0,6,"NO_INFO");
+      EXCELL_CELL_FILLOUT(handle,ROW0,8,"NO_INFO");
+      EXCELL_CELL_FILLOUT(handle,ROW0,10,"NO_INFO");
+      EXCELL_CELL_FILLOUT(handle,ROW0,12,"NO_INFO");
+      EXCELL_CELL_FILLOUT(handle,ROW0,14,"NO_INFO");
+      EXCELL_CELL_FILLOUT(handle,ROW0,16,"NO_INFO");
+     endif
+     if(getline(line," '-02 ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE);
+      EXCELL_CELL_FILLOUT(handle,ROW0,7,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,8,CELL_STATE);  
+     endif
+     if(getline(line," '-03 ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,9,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,10,CELL_STATE); 
+     endif
+     if(getline(line," '-04 ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,11,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,12,CELL_STATE); 
+     endif
+     if(getline(line," '-05 ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,13,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,14,CELL_STATE); 
+     endif
+     if(getline(line," '-06 ' ")) 
+      strscan(line,"%s %s %s %s",temp,temp,CELL_ID,CELL_STATE); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,15,CELL_ID); 
+      EXCELL_CELL_FILLOUT(handle,ROW0,16,CELL_STATE); 
+     endif
+      
+   ROW0++;
+   endfor  
+  deviceclose(RNC[x]); 
+  endfor
+  EXCELL_CELL_FILLOUT(handle,1,1,""); EXCELL_CELL_FILLOUT(handle,1,2,"");
+  pause(5,"FIN DE LA MACRO!!");
+
+endfunction
